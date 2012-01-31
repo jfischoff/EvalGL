@@ -1,0 +1,281 @@
+//
+//  OpenGLCommands.h
+//  BabyMorpher2
+//
+//  Created by hi5 networks on 1/28/12.
+//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//
+
+#ifndef BabyMorpher2_OpenGLCommands_h
+#define BabyMorpher2_OpenGLCommands_h
+
+#import <OpenGLES/ES2/gl.h>
+
+typedef enum { 
+    E_GL_BLEND,
+    E_GL_CULL_FACE,
+    E_GL_DEPTH_TEST,
+    E_GL_DITHER,
+    E_GL_POLYGON_OFFSET_FILL,
+    E_GL_SAMPLE_ALPHA_TO_COVERAGE,
+    E_GL_SAMPLE_COVERAGE,
+    E_GL_SCISSOR_TEST,
+    E_GL_STENCIL_TEST
+} EnableEnums;
+
+
+typedef enum { 
+    ARRAY_BUFFER,
+    ELEMENT_ARRAY_BUFFER
+} BufferTarget;
+
+typedef struct {
+    int id;
+    int offset;
+} MemoryLocation;
+
+typedef enum {
+    Static_Draw, 
+    Stream_Draw,
+    Dynamic_Draw
+} Usage;
+
+typedef enum {
+    BUFFER_SIZE,
+    BUFFER_USAGE   
+} GetBufferValue;
+
+typedef enum {
+    VA_BYTE,
+    VA_UNSIGNED_BYTE,
+    VA_SHORT,
+    VA_UNSIGNED_SHORT,
+    VA_FIXED,
+    VA_FLOAT
+} VertexAttributeType;
+
+typedef struct EnvCommand_t* EnvCommand_p;
+typedef struct EnvResult_t* EnvResult_p;
+
+typedef struct GLCommand_t* GLCommand_p;
+typedef struct GLResult_t* GLResult_p;
+
+typedef struct AddData_t* AddData_p;
+typedef struct AddDataResult_t* AddDataResult_p;
+
+typedef struct DeleteData_t* DeleteData_p;
+typedef struct DeleteDataResult_t* DeleteDataResult_p;
+
+typedef struct UpdateData_t* UpdateData_p;
+typedef struct UpdateDataResult_t* UpdateDataResult_p;
+
+typedef struct Enable_t* Enable_p;
+typedef struct EnableResult_t* EnableResult_p;
+
+typedef struct GenBuffers_t* GenBuffers_p;
+typedef struct GenBuffersResult_t* GenBuffersResult_p;
+
+typedef struct DeleteBuffers_t* DeleteBuffers_p;
+typedef struct DeleteBuffersResult_t* DeleteBuffersResult_p;
+
+typedef struct BindBuffer_t* BindBuffer_p;
+typedef struct BindBufferResult_t* BindBufferResult_p;
+
+typedef struct BufferData_t* BufferData_p;
+typedef struct BufferDataResult_t* BufferDataResult_p;
+
+typedef struct VertexAttribPointer_t* VertexAttribPointer_p;
+typedef struct VertexAttribPointerResult_t* VertexAttribPointerResult_p;
+
+typedef struct CommandResult_t* CommandResult_p;
+
+typedef struct Command_t {
+    enum {
+      ENV_COMMAND,
+      GL_COMMAND
+    };
+    
+    union {
+        EnvCommand_p env_command;
+        GLCommand_p  gl_command;
+    };
+} Command;
+
+typedef struct CommandResult_t {
+    enum {
+        ENV_COMMAND_RESULT,
+        GL_COMMAND_RESULT
+    };
+    
+    union {
+        EnvResult_p env_result;
+        GLResult_p  gl_result;
+    };
+} CommandResult;
+
+typedef enum {
+    ADD_DATA,
+    DELETE_DATA,
+    UPDATE_DATA
+} EnvCommandType;
+
+typedef struct EnvCommand_t {
+    EnvCommandType type;
+    
+    union {
+        AddData_p    add_data;
+        DeleteData_p delete_data;
+        UpdateData_p update_data;
+    };
+} EnvCommand;
+
+
+typedef struct EnvResult_t {
+    enum {
+        ADD_DATA_RESULT,
+        DELETE_DATA_RESULT,
+        UPDATE_DATA_RESULT
+    };
+    
+    union {
+        AddDataResult_p    add_data;
+        DeleteDataResult_p delete_data;
+        UpdateDataResult_p update_data;
+    };
+} EnvResult;
+
+typedef struct AddData_t {
+    int index;
+    char* buffer;
+} AddData;
+
+typedef struct DeleteData_t {
+    int index;
+} DeleteData;
+
+typedef struct UpdateData_t {
+    int index;
+    char* buffer;
+} UpdateData;
+
+typedef enum {
+    ENABLE,
+    GENBUFFERS,
+    DELETEBUFFERS,
+    BINDBUFFER,
+    BUFFERDATA,
+    VERTEX_ATTRIB_POINTER
+} EGLCommand;
+
+struct GLCommand {    
+    EGLCommand type;
+    
+    union {
+        Enable_p enable;
+        GenBuffers_p gen_buffers;
+        DeleteBuffers_p delete_buffers;
+        BindBuffer_p bind_buffer;
+        BufferData_p buffer_data;
+        VertexAttribPointer_p vertex_attrib_pointer;
+    };
+};
+
+typedef struct Enable_t {
+    EnableEnums state;
+} Enable;
+
+struct GenBuffers {
+    int buffer_count;
+};
+
+struct DeleteBuffers {
+    GLuint* buffers;
+    int count;
+};
+
+struct BindBuffer {
+    BufferTarget buffer_target;
+    GLuint buffer;
+};
+
+struct BufferData {
+    BufferTarget buffer_target;
+    GLuint size;
+    MemoryLocation memory_location;
+    Usage usage;
+};
+
+struct BufferSubData {
+    BufferTarget buffer_target;
+    GLuint offset;
+    GLuint size;
+    MemoryLocation memory_location;
+};
+
+struct IsBuffer {
+    GLuint id;
+};
+
+struct GetBufferParameteriv {
+    BufferTarget buffer_target;
+    GetBufferValue buffer_value;
+};
+
+struct VertexAttrib {
+    int size;
+    bool is_float;
+    bool is_vector;
+    GLuint index;
+};
+
+typedef enum {
+    VAP_BYTE, 
+    VAP_UNSIGNED_BYTE, 
+    VAP_SHORT, 
+    VAP_UNSIGNED_SHORT, 
+    VAP_INT, 
+    VAP_UNSIGNED_INT, 
+    VAP_FLOAT, 
+    VAP_DOUBLE
+} VAP_EType;
+
+struct VertexAttribPointer {
+    GLuint  	index;
+ 	GLint  	    size;
+    VAP_EType       type;
+ 	GLboolean  	normalized;
+ 	GLsizei  	stride;
+    MemoryLocation memory_location;
+};
+
+typedef struct TopLevelGLCommand_t {
+    GLCommand gl_cmd;
+    union {
+        Enable enable;
+        GenBuffers gen_buffers;
+        DeleteBuffers delete_buffers;
+        BindBuffer bind_buffer;
+        BufferData buffer_data;
+        VertexAttribPointer vertex_attrib_pointer;
+    };
+} TopLevelGLCommand;
+
+typedef struct TopLevelEnvCommand_t {
+    EnvCommand env_cmd;
+    union {
+        AddData    add_data;
+        DeleteData delete_data;
+        UpdateData update_data;
+    };
+} TopLevelEnvCommand;
+
+typedef struct TopLevelCommand_t {
+    Command cmd;
+    union {
+        TopLevelGLCommand  add_data;
+        TopLevelEnvCommand delete_data;
+    };
+} TopLevelCommand;
+
+ 
+#endif
