@@ -14,8 +14,14 @@ static Environment* _environment;
 static Command* _draw_commands;
 static Command _draw_command_list;
 static int _draw_commands_count;
-GLKMatrix4 _modelViewProjectionMatrix;
-GLKMatrix3 _normalMatrix;
+static GLKMatrix4 _modelViewProjectionMatrix;
+static GLKMatrix3 _normalMatrix;
+static char* _vertex_shader_sources[1];
+static char* _fragment_shader_sources[1];
+static Command* _model_view_get_uniform_command;
+static Command* _normal_get_uniform_command;
+
+
 float _rotation;
 
 // Uniform index.
@@ -154,12 +160,10 @@ GLfloat gCubeVertexData[216] =
     printf("setupGL\n");
 
     [EAGLContext setCurrentContext:self.context];
-    
-    uniforms[0] = 0;
-    uniforms[1] = 1;
 
     _environment = alloc_environment(6, 4);
     _environment->logging = GL_TRUE;
+    //_environment->logging = GL_FALSE;
     
     //allocate all the buffers for the environment;
     const int setup_cmd_count = 40;
@@ -168,9 +172,16 @@ GLfloat gCubeVertexData[216] =
     
     mk_add_data(p_setup_commands, 0, 216 * sizeof(GLfloat), (char*)gCubeVertexData);
     p_setup_commands++;
+
+    _modelViewProjectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), 1.0, 0.1f, 100.0f);
+    mk_add_data(p_setup_commands, "projection_matrix", sizeof(GLKMatrix4), (char*)_modelViewProjectionMatrix.m);
+
+    p_setup_commands++;
+ 
+    mk_add_data(p_setup_commands, "normal_matrix",     sizeof(GLKMatrix3), (char*)_normalMatrix.m);
+    p_setup_commands++;
     
-    mk_add_data(p_setup_commands, "projection_matrix", sizeof(GLKMatrix4), (char*)&_modelViewProjectionMatrix);
-    mk_add_data(p_setup_commands, "normal_matrix",     sizeof(GLKMatrix3), (char*)&_normalMatrix);
+    p_setup_commands = [self compile_shader:p_setup_commands];
     
     mk_enable(p_setup_commands, E_GL_DEPTH_TEST);
     p_setup_commands++;
@@ -205,6 +216,9 @@ GLfloat gCubeVertexData[216] =
     vertex_data_location.id = 0;
     vertex_data_location.offset = 0;
 
+    mk_bind_buffer(p_setup_commands, ARRAY_BUFFER, r);
+    p_setup_commands++;
+    
     mk_buffer_data(p_setup_commands, ARRAY_BUFFER, sizeof(gCubeVertexData), vertex_data_location, STATIC_DRAW);
     p_setup_commands++;
 
@@ -232,9 +246,7 @@ GLfloat gCubeVertexData[216] =
     
     mk_bind_vertex_arrays_oes(p_setup_commands, empty_resource_id);
     p_setup_commands++;
-    
-    p_setup_commands = [self compile_shader:p_setup_commands];
-    
+        
     Command setup_command_list;
     int actually_count = ((long long)p_setup_commands - (long long)setup_commands) / sizeof(Command);
     mk_command_list(&setup_command_list, setup_commands, actually_count);
@@ -242,44 +254,45 @@ GLfloat gCubeVertexData[216] =
     //I think I need to evaluate this thing and get out the results
     evaluate(_environment, &setup_command_list);
     
+    //uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX] = _model_view_get_uniform_command->get_uniform_location.result.right.index;
+    //uniforms[UNIFORM_NORMAL_MATRIX]              = _normal_get_uniform_command->get_uniform_location.result.right.index;
+    
     //DRAW COMMANDS
-    _draw_commands_count = 5;
+    _draw_commands_count = 10;
     
     _draw_commands = malloc(sizeof(Command) * _draw_commands_count); 
     Command* p_draw_commands = _draw_commands; 
     
-    mk_clear_color(p_draw_commands, 0.65f, 0.65f, 0.65f, 1.0f);
+    mk_clear_color(p_draw_commands, 1.0f, 0.0f, 0.5f, 1.0f);
     p_draw_commands++;
     
     mk_clear(p_draw_commands, COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     p_draw_commands++;
     
+    ResourceId program_id = mk_resource_id_s("program");
+    
     mk_bind_vertex_arrays_oes(p_draw_commands, vertex_array_id);
     p_draw_commands++;
     
-    mk_draw_arrays(p_draw_commands, TRIANGLES, 0, 36);
-    p_draw_commands++;
-    
-    ResourceId program_id;
-    
     mk_use_program(p_draw_commands, program_id);
     p_draw_commands++;
-        
-    MemoryLocation project_matrix = mk_memory_location("projection_matrix", 0);
-    mk_uniform_matrix(p_draw_commands, MATRIX_UNIFORM_4X4, uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 
-                      0, project_matrix);
-    p_draw_commands++;
+            
+    //MemoryLocation project_matrix = mk_memory_location("projection_matrix", 0);
+    //mk_uniform_matrix(p_draw_commands, MATRIX_UNIFORM_4X4, uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 
+    //                  0, project_matrix);
+    //p_draw_commands++;
     
-    MemoryLocation normal_matrix = mk_memory_location("normal_matrix", 0);
-    mk_uniform_matrix(p_draw_commands, MATRIX_UNIFORM_3X3, 
-                      uniforms[UNIFORM_NORMAL_MATRIX], 1, 
-                      0, normal_matrix);
-    p_draw_commands++;
+    //MemoryLocation normal_matrix = mk_memory_location("normal_matrix", 0);
+    //mk_uniform_matrix(p_draw_commands, MATRIX_UNIFORM_3X3, 
+     //                 uniforms[UNIFORM_NORMAL_MATRIX], 1, 
+     //                 0, normal_matrix);
+    //p_draw_commands++;
 
     mk_draw_arrays(p_draw_commands, TRIANGLES, 0, 36);
     p_draw_commands++;
 
-    mk_command_list(&_draw_command_list, _draw_commands, _draw_commands_count);
+    int draw_commands = ((long long)p_draw_commands - (long long)_draw_commands) / sizeof(Command);
+    mk_command_list(&_draw_command_list, _draw_commands, draw_commands);
 
 }
 
@@ -342,13 +355,17 @@ GLfloat gCubeVertexData[216] =
     vertex_shader_source.id     = "vertex_shader_source";
     vertex_shader_source.offset = 0;
     
+    //I need to copy the source into a buffer that does not go away
     GLchar* source = (GLchar *)[[NSString stringWithContentsOfFile:vertShaderPathname encoding:NSUTF8StringEncoding error:nil] UTF8String];
     if (!source) {
         NSLog(@"Failed to load vertex shader");
         return NO;
     }
     
-    mk_add_data(p_shader_commands, "vertex_shader_source", 1, source);
+    _vertex_shader_sources[0] = malloc(strlen(source) + 1);
+    strcpy(_vertex_shader_sources[0], source);
+    
+    mk_add_data(p_shader_commands, "vertex_shader_source", 1, (char*)_vertex_shader_sources);
     p_shader_commands++;
     
     p_shader_commands = [self compile_shader:p_shader_commands shader:"vertex_shader" type:GL_VERTEX_SHADER memory_location:vertex_shader_source];
@@ -370,7 +387,10 @@ GLfloat gCubeVertexData[216] =
         return NO;
     }
     
-    mk_add_data(p_shader_commands, "fragment_shader_source", 1, frag_source);
+    _fragment_shader_sources[0] = malloc(strlen(frag_source) + 1);
+    strcpy(_fragment_shader_sources[0], frag_source);
+    
+    mk_add_data(p_shader_commands, "fragment_shader_source", 1, (char*)_fragment_shader_sources);
     p_shader_commands++;
     
     p_shader_commands = [self compile_shader:p_shader_commands shader:"fragment_shader" type:GL_FRAGMENT_SHADER memory_location:fragment_shader_source];
@@ -415,7 +435,14 @@ GLfloat gCubeVertexData[216] =
 
     // Get uniform locations.
     //uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX] = glGetUniformLocation(_program, "modelViewProjectionMatrix");
+    //mk_get_uniform_location(p_shader_commands, "program", "modelViewProjectionMatrix");
+    //_model_view_get_uniform_command = p_shader_commands;
+    //p_shader_commands++;
+    
     //uniforms[UNIFORM_NORMAL_MATRIX] = glGetUniformLocation(_program, "normalMatrix");
+    //mk_get_uniform_location(p_shader_commands, "program", "normalMatrix");
+    //_normal_get_uniform_command = p_shader_commands;
+    //p_shader_commands++;
 
     // Release vertex and fragment shaders.
     //if (vertShader) {
@@ -469,6 +496,7 @@ GLfloat gCubeVertexData[216] =
 - (Command*)linkProgram:(Command*)p_commands prog:(const char*)prog
 {
     mk_link_program(p_commands, prog);
+    p_commands++;
     
 #if defined(DEBUG)
     //GLint logLength;
@@ -491,7 +519,7 @@ GLfloat gCubeVertexData[216] =
 
 - (BOOL)validateProgram:(GLuint)prog
 {
-/*
+
     GLint logLength, status;
     
     glValidateProgram(prog);
@@ -507,7 +535,7 @@ GLfloat gCubeVertexData[216] =
     if (status == 0) {
         return NO;
     }
-*/
+
     return YES;
 }
 

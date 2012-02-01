@@ -55,9 +55,17 @@ void*  from_memory_location(Environment* environment, MemoryLocation memory_loca
 void   add_resource(Environment* env, Resource resource);   
 void delete_resource(Environment* env, const char* id);
 void update_resource(Environment* env, const char* id, const char* data, int count);
-void   log_command(Environment* env, Command* command);
+void   log_input(Environment* env, Command* command);
+void   log_output(Environment* env, Command* command);
 
-
+GLenum enable_enum_to_gl_enum(EnableEnums state);
+GLenum buffer_target_gl_enum(BufferTarget type);
+GLenum usage_to_gl_enum(Usage type);
+GLenum draw_component_to_gl_enum(DrawComponent type);
+GLenum vertex_attribute_types_gl_enum(VertexAttributeType type);
+GLenum vap_to_gl_enum(VAP_EType type);
+GLenum shader_types_to_gl_enum(EShaderType type);
+GLuint clear_flag_to_gl_enum(GLenum flags);
 
 
 

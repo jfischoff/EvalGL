@@ -17,5 +17,6 @@
 - (Command*)compile_shader:(Command*)p_shader_commands;
 - (Command*)compile_shader:(Command*)p_commands shader:(const char*)shader type:(GLenum)type memory_location:(MemoryLocation)memory_location;
 - (Command*)linkProgram:(Command*)p_commands prog:(const char*)prog;
+- (BOOL)validateProgram:(GLuint)prog;
 
 @end

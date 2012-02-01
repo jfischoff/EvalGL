@@ -104,8 +104,7 @@ typedef enum {
     VAP_UNSIGNED_SHORT, 
     VAP_INT, 
     VAP_UNSIGNED_INT, 
-    VAP_FLOAT, 
-    VAP_DOUBLE
+    VAP_FLOAT
 } VAP_EType;
 
 typedef enum {
@@ -133,7 +132,7 @@ typedef struct GenVertexArraysOES {
             int count;  
         } right;
         struct {
-            
+            GLenum error;
         } left;
     } result;
 
@@ -163,8 +162,7 @@ typedef struct VertexAttribPointer_t {
         ECommandResult type;
         struct {} right;
         struct {
-            EVertexAttribPointerError type;
-            GLenum gl_error; 
+            GLenum error; 
         } left;
     } result;
 } VertexAttribPointer;
@@ -394,7 +392,13 @@ typedef struct Clear_t {
     struct {
         GLint clear_flags;
     } cmd;
-    struct {} result;
+    struct {
+        ECommandResult type;
+        struct {} right;
+        struct {
+            GLenum error;
+        } left;   
+    } result;
 } Clear;
 
 typedef enum EDrawType_t {
@@ -563,6 +567,22 @@ typedef struct LinkProgram_t {
     } result;
 } LinkProgram;
 
+typedef struct GetUniformLocation_t {
+    struct {
+        ResourceId program_id;
+        const char* name;
+    } cmd;
+    struct {
+        ECommandResult type;
+        struct {
+            GLuint index;
+        } right;
+        struct {
+            GLenum error;
+        } left;
+    } result;
+} GetUniformLocation;
+
 typedef enum {
     ADDDATA,
     DELETEDATA,
@@ -588,7 +608,8 @@ typedef enum {
     CREATE_SHADER,
     SHADER_SOURCE,
     COMPILE_SHADER,
-    LINK_PROGRAM
+    LINK_PROGRAM,
+    GET_UNIFORM_LOCATION
     
 } ECommandType;
 
@@ -621,6 +642,7 @@ typedef struct Command_t {
         ShaderSource shader_source;
         CompileShader compile_shader;
         LinkProgram link_program;
+        GetUniformLocation get_uniform_location;
     };
 } Command;
 
@@ -659,6 +681,7 @@ void mk_create_shader(Command* cmd, const char* shader, EShaderType shader_type)
 void mk_shader_source(Command* cmd, const char* shader, GLint count, MemoryLocation source_location, GLint* length);
 void mk_compile_shader(Command* cmd, const char* shader);
 void mk_link_program(Command* cmd, const char* prog);
+void mk_get_uniform_location(Command* cmd, const char* prog, const char* name);
 MemoryLocation mk_memory_location(const char* id, int offset);
 
 //enum conversion
@@ -674,40 +697,43 @@ const char* vap_string(VAP_EType type);
 const char* clear_flag_string(ClearFlag flag);
 const char* component_type_string(DrawComponent component_type);
 const char* uniform_matrix_string(MatrixUniformType matrix_type);
+const char* result_string(ECommandResult result);
 
 //SHOW
-void show_command(char* buffer, int size, Command* command);
-void show_add_data(char* buffer, int size, AddData* add_data);
-void show_delete_data(char* buffer, int size, DeleteData* delete_data);
-void show_update_data(char* buffer, int size, UpdateData* update_data);
-void show_enable(char* buffer, int size, Enable* enable);
-void show_gen_buffers(char* buffer, int size, GenBuffers* gen_buffers);
-void show_delete_buffers(char* buffer, int size, DeleteBuffers* delete_buffers);
-void show_bind_buffers(char* buffer, int size, BindBuffer* bind_buffers);
-void show_buffer_data(char* buffer, int size, BufferData* buffer_data);
-void show_vertex_attrib_pointer(char* buffer, int size, VertexAttribPointer* vertex_attrib_pointer);
-void show_gen_vertex_arrays_oes(char* buffer, int size, GenVertexArraysOES* gen_vertex_arrays_oes);
-void show_bind_vertex_arrays_oes(char* buffer, int size, BindVertexArrayOES* bind_vertex_arrays_oes);
-void show_enable_vertex_attrib_array(char* buffer, int size, EnableVertexAttribArray* enable_vertex_attrib_array);
-void show_command_list(char* buffer, int size, CommandList* command_list);
 void show_resource_id(char* buffer, int size, ResourceId resource_id);
 void show_resource_mapper(char* buffer, int size, ResourceMapper resource_mapper);
 void show_resource_id_array(char* buffer, int size, ResourceId* resource_ids, int count);
 void show_memory_location(char* buffer, MemoryLocation memory_location);
 
-void show_clear_color(char* buffer, int size, ClearColor* x);
-void show_clear(char* buffer, int size, Clear* x);
+void show_command(GLboolean input, GLboolean output, char* buffer, int size, Command* command);
+void show_add_data(GLboolean input, GLboolean output, char* buffer, int size, AddData* add_data);
+void show_delete_data(GLboolean input, GLboolean output, char* buffer, int size, DeleteData* delete_data);
+void show_update_data(GLboolean input, GLboolean output, char* buffer, int size, UpdateData* update_data);
+void show_enable(GLboolean input, GLboolean output, char* buffer, int size, Enable* enable);
+void show_gen_buffers(GLboolean input, GLboolean output, char* buffer, int size, GenBuffers* gen_buffers);
+void show_delete_buffers(GLboolean input, GLboolean output, char* buffer, int size, DeleteBuffers* delete_buffers);
+void show_bind_buffers(GLboolean input, GLboolean output, char* buffer, int size, BindBuffer* bind_buffers);
+void show_buffer_data(GLboolean input, GLboolean output, char* buffer, int size, BufferData* buffer_data);
+void show_vertex_attrib_pointer(GLboolean input, GLboolean output, char* buffer, int size, VertexAttribPointer* vertex_attrib_pointer);
+void show_gen_vertex_arrays_oes(GLboolean input, GLboolean output, char* buffer, int size, GenVertexArraysOES* gen_vertex_arrays_oes);
+void show_bind_vertex_arrays_oes(GLboolean input, GLboolean output, char* buffer, int size, BindVertexArrayOES* bind_vertex_arrays_oes);
+void show_enable_vertex_attrib_array(GLboolean input, GLboolean output, 
+                                     char* buffer, int size, EnableVertexAttribArray* enable_vertex_attrib_array);
+void show_command_list(GLboolean input, GLboolean output, char* buffer, int size, CommandList* command_list);
+void show_clear_color(GLboolean input, GLboolean output, char* buffer, int size, ClearColor* x);
+void show_clear(GLboolean input, GLboolean output, char* buffer, int size, Clear* x);
 const char*  show_clear_flag(int index, GLboolean value);
-void show_draw_arrays(char* buffer, int size, DrawArrays* x);
-void show_use_program(char* buffer, int size, UseProgram* x);
-void show_uniform_matrix(char* buffer, int size, UniformMatrix* x);
-void show_attack_shader(char* buffer, int size, AttachShader* x);
-void show_bind_attrib_location(char* buffer, int size, BindAttribLocation* x); 
-void show_create_program(char* buffer, int size, CreateProgram* x);
-void show_create_shader(char* buffer, int size, CreateShader* x);
-void show_shader_source(char* buffer, int size, ShaderSource* x);
-void show_compile_shader(char* buffer, int size, CompileShader* x);
-void show_link_program(char* buffer, int size, LinkProgram* x);
+void show_draw_arrays(GLboolean input, GLboolean output, char* buffer, int size, DrawArrays* x);
+void show_use_program(GLboolean input, GLboolean output, char* buffer, int size, UseProgram* x);
+void show_uniform_matrix(GLboolean input, GLboolean output, char* buffer, int size, UniformMatrix* x);
+void show_attack_shader(GLboolean input, GLboolean output, char* buffer, int size, AttachShader* x);
+void show_bind_attrib_location(GLboolean input, GLboolean output, char* buffer, int size, BindAttribLocation* x); 
+void show_create_program(GLboolean input, GLboolean output, char* buffer, int size, CreateProgram* x);
+void show_create_shader(GLboolean input, GLboolean output, char* buffer, int size, CreateShader* x);
+void show_shader_source(GLboolean input, GLboolean output, char* buffer, int size, ShaderSource* x);
+void show_compile_shader(GLboolean input, GLboolean output, char* buffer, int size, CompileShader* x);
+void show_link_program(GLboolean input, GLboolean output, char* buffer, int size, LinkProgram* x);
+void show_get_uniform_location(GLboolean input, GLboolean output, char* buffer, int size, GetUniformLocation* x);
 
 
 

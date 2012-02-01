@@ -12,6 +12,11 @@
 #include <memory.h>
 #include <assert.h>
 
+const char* ECommandResultStrings[] = {
+    "SUCCESS",
+    "ERROR"
+};
+
 const char* MatrixUniformTypeStrings[] = {
     "MATRIX_UNIFORM_2X2",
     "MATRIX_UNIFORM_3X3",
@@ -344,7 +349,13 @@ MemoryLocation mk_memory_location(const char* id, int offset) {
     return ml;
 }
 
-void show_command(char* buffer, int size, Command* command) {
+void mk_get_uniform_location(Command* cmd, const char* prog, const char* name) {
+    cmd->type = GET_UNIFORM_LOCATION;
+    cmd->get_uniform_location.cmd.program_id = mk_resource_id_s(prog);
+    cmd->get_uniform_location.cmd.name = name;
+}
+
+void show_command(GLboolean input, GLboolean output, char* buffer, int size, Command* command) {
     char sub_buffer[500];
     memset(sub_buffer, 0, 500);
     
@@ -352,102 +363,106 @@ void show_command(char* buffer, int size, Command* command) {
     
     switch (command->type) {
         case ADDDATA:
-            show_add_data(sub_buffer, 500, &command->add_data);
+            show_add_data(input, output, sub_buffer, 500, &command->add_data);
             break;
         case DELETEDATA:
-            show_delete_data(sub_buffer, 500, &command->delete_data);
+            show_delete_data(input, output, sub_buffer, 500, &command->delete_data);
             break;
             
         case UPDATEDATA:
-            show_update_data(sub_buffer, 500, &command->update_data);
+            show_update_data(input, output, sub_buffer, 500, &command->update_data);
             break;    
             
         case ENABLE:
-            show_enable(sub_buffer, 500, &command->enable);
+            show_enable(input, output, sub_buffer, 500, &command->enable);
             break;
             
         case GENBUFFERS:
-            show_gen_buffers(sub_buffer, 500, &command->gen_buffers);
+            show_gen_buffers(input, output, sub_buffer, 500, &command->gen_buffers);
             break;
             
         case DELETEBUFFERS:
-            show_delete_buffers(sub_buffer, 500, &command->delete_buffers);
+            show_delete_buffers(input, output, sub_buffer, 500, &command->delete_buffers);
             break;
             
         case BINDBUFFER:
-            show_bind_buffers(sub_buffer, 500, &command->bind_buffer);
+            show_bind_buffers(input, output, sub_buffer, 500, &command->bind_buffer);
             break;
             
         case BUFFERDATA:
-            show_buffer_data(sub_buffer, 500, &command->buffer_data);
+            show_buffer_data(input, output, sub_buffer, 500, &command->buffer_data);
             break;
             
         case VERTEX_ATTRIB_POINTER:
-            show_vertex_attrib_pointer(sub_buffer, 500, &command->vertex_attrib_pointer);
+            show_vertex_attrib_pointer(input, output, sub_buffer, 500, &command->vertex_attrib_pointer);
             break;
             
         case GEN_VERTEX_ARRAYS_OES:
-            show_gen_vertex_arrays_oes(sub_buffer, 500, &command->gen_vertex_arrays_oes);
+            show_gen_vertex_arrays_oes(input, output, sub_buffer, 500, &command->gen_vertex_arrays_oes);
             break;
             
         case BIND_VERTEX_ARRAY_OES:
-            show_bind_vertex_arrays_oes(sub_buffer, 500, &command->bind_vertex_array_oes);
+            show_bind_vertex_arrays_oes(input, output, sub_buffer, 500, &command->bind_vertex_array_oes);
             break;
             
         case ENABLE_VERTEX_ATTRIB_ARRAY:
-            show_enable_vertex_attrib_array(sub_buffer, 500, &command->enable_vertex_attribute_array);
+            show_enable_vertex_attrib_array(input, output, sub_buffer, 500, &command->enable_vertex_attribute_array);
             break;
             
         case COMMAND_LIST:            
-            show_command_list(sub_buffer, 500, &command->command_list);
+            show_command_list(input, output, sub_buffer, 500, &command->command_list);
             break;
             
         case CLEAR_COLOR:
-            show_clear_color(sub_buffer, 500, &command->clear_color);
+            show_clear_color(input, output, sub_buffer, 500, &command->clear_color);
             break;
             
         case CLEAR:
-            show_clear(sub_buffer, 500, &command->clear);
+            show_clear(input, output, sub_buffer, 500, &command->clear);
             break;
             
         case DRAW_ARRAYS:
-            show_draw_arrays(sub_buffer, 500, &command->draw_arrays);
+            show_draw_arrays(input, output, sub_buffer, 500, &command->draw_arrays);
             break;
             
         case USE_PROGRAM:
-            show_use_program(sub_buffer, 500, &command->use_program);
+            show_use_program(input, output, sub_buffer, 500, &command->use_program);
             break;
             
         case UNIFORM_MATRIX:
-            show_uniform_matrix(sub_buffer, 500, &command->uniform_matrix);
+            show_uniform_matrix(input, output, sub_buffer, 500, &command->uniform_matrix);
             break;
             
         case ATTACH_SHADER:
-            show_attack_shader(sub_buffer, 500, &command->attach_shader);
+            show_attack_shader(input, output, sub_buffer, 500, &command->attach_shader);
             break;
             
         case BIND_ATTRIBUTE_LOCATION:
-            show_bind_attrib_location(sub_buffer, 500, &command->bind_attrib_location);
+            show_bind_attrib_location(input, output, sub_buffer, 500, &command->bind_attrib_location);
             break;
             
         case CREATE_PROGRAM:
-            show_create_program(sub_buffer, 500, &command->create_program);
+            show_create_program(input, output, sub_buffer, 500, &command->create_program);
             break;
             
         case CREATE_SHADER:
-            show_create_shader(sub_buffer, 500, &command->create_shader);
+            show_create_shader(input, output, sub_buffer, 500, &command->create_shader);
             break;
             
         case SHADER_SOURCE:
-            show_shader_source(sub_buffer, 500, &command->shader_source);
+            show_shader_source(input, output, sub_buffer, 500, &command->shader_source);
             break;
             
         case COMPILE_SHADER:
-            show_compile_shader(sub_buffer, 500, &command->compile_shader);
+            show_compile_shader(input, output, sub_buffer, 500, &command->compile_shader);
             break;
             
         case LINK_PROGRAM:
-            show_link_program(sub_buffer, 500, &command->link_program);
+            show_link_program(input, output, sub_buffer, 500, &command->link_program);
+            break;
+            
+        case GET_UNIFORM_LOCATION:
+            show_get_uniform_location(input, output, sub_buffer, 500, &command->get_uniform_location);
             break;
             
         default:
@@ -459,91 +474,179 @@ void show_command(char* buffer, int size, Command* command) {
     sprintf(buffer, "Command type = %s with value %s", type_string, sub_buffer);
 }
 
-void show_add_data(char* buffer, int size, AddData* add_data) {
-    sprintf(buffer, "id %s, count %d, data %d", add_data->cmd.id, 
+void show_add_data(GLboolean input, GLboolean output, char* buffer, int size, AddData* add_data) {
+    if(input) {
+        sprintf(buffer, "id %s, count %d, data %d", add_data->cmd.id, 
             add_data->cmd.count, (int)add_data->cmd.buffer);
+    }
+    
+    if(output){
+        //TODO
+    }
 }
 
 
-void show_delete_data(char* buffer, int size, DeleteData* delete_data) {
-    sprintf(buffer, "id %s", delete_data->cmd.id);    
+void show_delete_data(GLboolean input, GLboolean output, char* buffer, int size, DeleteData* delete_data) {
+    if(input) {
+        sprintf(buffer, "id %s", delete_data->cmd.id); 
+    }
+    
+    if(output){
+        //TODO
+    }
 }
 
-void show_update_data(char* buffer, int size, UpdateData* x) {
-    sprintf(buffer, "id %s", x->cmd.id);        
+void show_update_data(GLboolean input, GLboolean output, char* buffer, int size, UpdateData* x) {
+    if(input) {
+        sprintf(buffer, "id %s", x->cmd.id);  
+    }
+    
+    if(output){
+        //TODO
+    }
 }
 
-void show_enable(char* buffer, int size, Enable* x) {
-    sprintf(buffer, "state %s", enable_type_string(x->cmd.state));    
+void show_enable(GLboolean input, GLboolean output, char* buffer, int size, Enable* x) {
+    if(input) {
+        sprintf(buffer, "state %s", enable_type_string(x->cmd.state));    
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
  
-void show_gen_buffers(char* buffer, int size, GenBuffers* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_mapper(sub_buffer, 50, x->cmd.mapper);
+void show_gen_buffers(GLboolean input, GLboolean output, char* buffer, int size, GenBuffers* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_mapper(sub_buffer, 50, x->cmd.mapper);
     
-    sprintf(buffer, "count %d, resource id %s", x->cmd.count, sub_buffer);
+        sprintf(buffer, "count %d, resource id %s", x->cmd.count, sub_buffer);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_delete_buffers(char* buffer, int size, DeleteBuffers* x) {
-    char sub_buffer[200];
-    memset(sub_buffer, 0, 200);
-    show_resource_id_array(sub_buffer, 200, x->cmd.buffers, x->cmd.count);
+void show_delete_buffers(GLboolean input, GLboolean output, char* buffer, int size, DeleteBuffers* x) {
+    if(input) {
+        char sub_buffer[200];
+        memset(sub_buffer, 0, 200);
+        show_resource_id_array(sub_buffer, 200, x->cmd.buffers, x->cmd.count);
     
-    sprintf(buffer, "count %d, ids %s", x->cmd.count, sub_buffer);
+        sprintf(buffer, "count %d, ids %s", x->cmd.count, sub_buffer);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_bind_buffers(char* buffer, int size, BindBuffer* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_id(sub_buffer, 50, x->cmd.id);
+void show_bind_buffers(GLboolean input, GLboolean output, char* buffer, int size, BindBuffer* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_id(sub_buffer, 50, x->cmd.id);
+        
+        sprintf(buffer, "target %s, id %s", buffer_target_string(x->cmd.buffer_target), 
+                sub_buffer);
+    }
     
-    sprintf(buffer, "target %s, id %s", buffer_target_string(x->cmd.buffer_target), 
-            sub_buffer);
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_buffer_data(char* buffer, int size, BufferData* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);    
-    show_memory_location(sub_buffer, x->cmd.memory_location);
+void show_buffer_data(GLboolean input, GLboolean output, char* buffer, int size, BufferData* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);    
+        show_memory_location(sub_buffer, x->cmd.memory_location);
+        
+        sprintf(buffer, "buffer target %s, size %d, memory location %s, usage %s", 
+                buffer_target_string(x->cmd.buffer_target),
+                x->cmd.size, sub_buffer, usage_string(x->cmd.usage));
+    }
     
-    sprintf(buffer, "buffer target %s, size %d, memory location %s, usage %s", 
-            buffer_target_string(x->cmd.buffer_target),
-            x->cmd.size, sub_buffer, usage_string(x->cmd.usage));
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_vertex_attrib_pointer(char* buffer, int size, VertexAttribPointer* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_memory_location(buffer, x->cmd.memory_location);
+void show_vertex_attrib_pointer(GLboolean input, GLboolean output, char* buffer, int size, VertexAttribPointer* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_memory_location(buffer, x->cmd.memory_location);
+        
+        sprintf(buffer, "index %d, size %d, type %s, normalized %d, stride %d, memory_location %s",
+                x->cmd.index, x->cmd.size, vap_string(x->cmd.type), x->cmd.normalized, 
+                x->cmd.stride, sub_buffer);
+    }
     
-    sprintf(buffer, "index %d, size %d, type %s, normalized %d, stride %d, memory_location %s",
-            x->cmd.index, x->cmd.size, vap_string(x->cmd.type), x->cmd.normalized, 
-            x->cmd.stride, sub_buffer);
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_gen_vertex_arrays_oes(char* buffer, int size, GenVertexArraysOES* x) {
-    char sub_buffer[200];
-    memset(sub_buffer, 0, 200);
-    show_resource_mapper(sub_buffer, 200, x->cmd.mapper);
+void show_gen_vertex_arrays_oes(GLboolean input, GLboolean output, char* buffer, int size, GenVertexArraysOES* x) {
+    if(input) {
+        char sub_buffer[200];
+        memset(sub_buffer, 0, 200);
+        show_resource_mapper(sub_buffer, 200, x->cmd.mapper);
+        
+        sprintf(buffer, "count %d, mapper %s", x->cmd.count, sub_buffer);
+    }
     
-    sprintf(buffer, "count %d, mapper %s", x->cmd.count, sub_buffer);
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
  
-void show_bind_vertex_arrays_oes(char* buffer, int size, BindVertexArrayOES* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_id(sub_buffer, 50, x->cmd.id);
+void show_bind_vertex_arrays_oes(GLboolean input, GLboolean output, char* buffer, int size, BindVertexArrayOES* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_id(sub_buffer, 50, x->cmd.id);
+        
+        sprintf(buffer, "id %s", sub_buffer);
+    }
     
-    sprintf(buffer, "id %s", sub_buffer);
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_enable_vertex_attrib_array(char* buffer, int size, EnableVertexAttribArray* x) {
-    sprintf(buffer, "index %d", x->cmd.index);
+void show_enable_vertex_attrib_array(GLboolean input, GLboolean output, char* buffer, int size, EnableVertexAttribArray* x) {
+    if(input) {
+        sprintf(buffer, "index %d", x->cmd.index);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_command_list(char* buffer, int size, CommandList* x) {
-    sprintf(buffer, "count %d", x->cmd.count);
+void show_command_list(GLboolean input, GLboolean output, char* buffer, int size, CommandList* x) {
+    if(input) {
+        sprintf(buffer, "count %d", x->cmd.count);
+    }
+    
+    //if(output){
+    //    sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+    //            x->result.left.error);        
+    //}
 }
 
 void show_resource_id(char* buffer, int size, ResourceId resource_id) {
@@ -613,27 +716,45 @@ const char* uniform_matrix_string(MatrixUniformType matrix_type) {
     return MatrixUniformTypeStrings[matrix_type];
 }
 
-void show_clear_color(char* buffer, int size, ClearColor* x) {
-    sprintf(buffer, "r %f, g %f, b %f, a %f", x->cmd.r, x->cmd.g, 
-            x->cmd.b, x->cmd.a);
+const char* result_string(ECommandResult result) {
+    return ECommandResultStrings[result];
 }
 
-void show_clear(char* buffer, int size, Clear* x) {
-    int flags = x->cmd.clear_flags;
+void show_clear_color(GLboolean input, GLboolean output, char* buffer, int size, ClearColor* x) {
+    if(input) {
+        sprintf(buffer, "r %f, g %f, b %f, a %f", x->cmd.r, x->cmd.g, 
+            x->cmd.b, x->cmd.a);
+    }
     
-    for (int i = 0; i < CLEAR_FLAG_MAX; i++) {
-        if (!flags) {
-            break;
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_clear(GLboolean input, GLboolean output, char* buffer, int size, Clear* x) {
+    if(input) {
+        int flags = x->cmd.clear_flags;
+        
+        for (int i = 0; i < CLEAR_FLAG_MAX; i++) {
+            if (!flags) {
+                break;
+            }
+            
+            const char* name = show_clear_flag(0x1 << i, flags & 0x1);
+            if (i != 0) {
+                strcat(buffer, " | ");
+            }
+            
+            strcat(buffer, name);
+            
+            flags >>= 1;        
         }
-        
-        const char* name = show_clear_flag(0x1 << i, flags & 0x1);
-        if (i != 0) {
-            strcat(buffer, " | ");
-        }
-        
-        strcat(buffer, name);
-        
-        flags >>= 1;        
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
     }
 }
 
@@ -652,106 +773,191 @@ const char* show_clear_flag(int index, GLboolean value) {
     return "Invalid clear flag!";
 }
 
-void show_draw_arrays(char* buffer, int size, DrawArrays* x) {
-    sprintf(buffer, "component_type %s, start %d, count %d", 
+void show_draw_arrays(GLboolean input, GLboolean output, char* buffer, int size, DrawArrays* x) {
+    if(input) {
+        sprintf(buffer, "component_type %s, start %d, count %d", 
             component_type_string(x->cmd.component_type), x->cmd.start, x->cmd.count);
-}
-
-void show_use_program(char* buffer, int size, UseProgram* x) {
-    show_resource_id(buffer, size, x->cmd.id);
-}
-
-void show_uniform_matrix(char* buffer, int size, UniformMatrix* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_memory_location(sub_buffer, x->cmd.memory_location);
-    
-    sprintf(buffer, "uniform_type %s, uniform_index %d, count %d, transpose %d, memory_location %s", 
-            uniform_matrix_string(x->cmd.uniform_type), 
-            x->cmd.uniform_index,
-            x->cmd.count,
-            x->cmd.transpose,
-            sub_buffer);
-}
-
-void show_attack_shader(char* buffer, int size, AttachShader* x) {
-    char program_buffer[50]; 
-    memset(program_buffer, 0, 50);
-    show_resource_id(program_buffer, 50, x->cmd.program_id);
-    
-    char shader_buffer[50];
-    memset(shader_buffer, 0, 50);
-    show_resource_id(shader_buffer, 50, x->cmd.shader_id);
-    
-    sprintf(buffer, "program %s, shader %s", program_buffer, shader_buffer);
-}
-
-void show_bind_attrib_location(char* buffer, int size, BindAttribLocation* x) {
-    char program_buffer[50];
-    memset(program_buffer, 0, 50);
-    show_resource_id(program_buffer, 50, x->cmd.program_id);
-    
-    sprintf(buffer, "program_id %s, index %d, name %s", program_buffer, x->cmd.index, x->cmd.name);
-}
-
-void show_create_program(char* buffer, int size, CreateProgram* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_mapper(sub_buffer, size, x->cmd.mapper);
-    
-    sprintf(buffer, "mapper %s", sub_buffer);
-    
-}
-
-void show_create_shader(char* buffer, int size, CreateShader* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_mapper(sub_buffer, size, x->cmd.mapper);
-    
-    sprintf(buffer, "mapper %s", sub_buffer);
-}
-
-void show_shader_source(char* buffer, int size, ShaderSource* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_id(sub_buffer, 50, x->cmd.id);
-    
-    char memory_buffer[50];
-    memset(memory_buffer, 0, 50);
-    show_memory_location(memory_buffer, x->cmd.source_location);
-    
-    char lengths_buffer[50];
-    memset(lengths_buffer, 0, 50);
-    
-    if(x->cmd.length != NULL) {    
-        for(int i = 0; i < x->cmd.count; i++) {
-            char int_buff[10];
-            memset(int_buff, 0, 10);
-            sprintf(int_buff, "%d", x->cmd.length[i]);
-            strcat(lengths_buffer, int_buff);
-        }
     }
+    
+    if (output) {
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error); 
+    }
+}
+
+void show_use_program(GLboolean input, GLboolean output, char* buffer, int size, UseProgram* x) {
+    if(input) {
+        show_resource_id(buffer, size, x->cmd.id);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_uniform_matrix(GLboolean input, GLboolean output, char* buffer, int size, UniformMatrix* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_memory_location(sub_buffer, x->cmd.memory_location);
         
-    sprintf(buffer, "id %s, count %d, memory_location %s, length %s", sub_buffer, x->cmd.count, memory_buffer,
-            lengths_buffer);
-}
-
-void show_compile_shader(char* buffer, int size, CompileShader* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_id(sub_buffer, 50, x->cmd.id);
+        sprintf(buffer, "uniform_type %s, uniform_index %d, count %d, transpose %d, memory_location %s", 
+                uniform_matrix_string(x->cmd.uniform_type), 
+                x->cmd.uniform_index,
+                x->cmd.count,
+                x->cmd.transpose,
+                sub_buffer);
+    }
     
-    sprintf(buffer, "id %s", sub_buffer);
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
-void show_link_program(char* buffer, int size, LinkProgram* x) {
-    char sub_buffer[50];
-    memset(sub_buffer, 0, 50);
-    show_resource_id(sub_buffer, 50, x->cmd.id);
+void show_attack_shader(GLboolean input, GLboolean output, char* buffer, int size, AttachShader* x) {
+    if(input) {
+        char program_buffer[50]; 
+        memset(program_buffer, 0, 50);
+        show_resource_id(program_buffer, 50, x->cmd.program_id);
+        
+        char shader_buffer[50];
+        memset(shader_buffer, 0, 50);
+        show_resource_id(shader_buffer, 50, x->cmd.shader_id);
+        
+        sprintf(buffer, "program %s, shader %s", program_buffer, shader_buffer);
+    }
     
-    sprintf(buffer, "id %s", sub_buffer);
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
 }
 
+void show_bind_attrib_location(GLboolean input, GLboolean output, char* buffer, int size, BindAttribLocation* x) {
+    if(input) {
+        char program_buffer[50];
+        memset(program_buffer, 0, 50);
+        show_resource_id(program_buffer, 50, x->cmd.program_id);
+        
+        sprintf(buffer, "program_id %s, index %d, name %s", program_buffer, x->cmd.index, x->cmd.name);
+    }    
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_create_program(GLboolean input, GLboolean output, char* buffer, int size, CreateProgram* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_mapper(sub_buffer, size, x->cmd.mapper);
+        
+        sprintf(buffer, "mapper %s", sub_buffer);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_create_shader(GLboolean input, GLboolean output, char* buffer, int size, CreateShader* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_mapper(sub_buffer, size, x->cmd.mapper);
+        
+        sprintf(buffer, "mapper %s", sub_buffer);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_shader_source(GLboolean input, GLboolean output, char* buffer, int size, ShaderSource* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_id(sub_buffer, 50, x->cmd.id);
+        
+        char memory_buffer[50];
+        memset(memory_buffer, 0, 50);
+        show_memory_location(memory_buffer, x->cmd.source_location);
+        
+        char lengths_buffer[50];
+        memset(lengths_buffer, 0, 50);
+        
+        if(x->cmd.length != NULL) {    
+            for(int i = 0; i < x->cmd.count; i++) {
+                char int_buff[10];
+                memset(int_buff, 0, 10);
+                sprintf(int_buff, "%d", x->cmd.length[i]);
+                strcat(lengths_buffer, int_buff);
+            }
+        }
+            
+        sprintf(buffer, "id %s, count %d, memory_location %s, length %s", sub_buffer, x->cmd.count, memory_buffer,
+                lengths_buffer);
+    }
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_compile_shader(GLboolean input, GLboolean output, char* buffer, int size, CompileShader* x) {
+    if(input){
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_id(sub_buffer, 50, x->cmd.id);
+    
+        sprintf(buffer, "id %s", sub_buffer);
+    }  
+    
+    if(output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);        
+    }
+}
+
+void show_link_program(GLboolean input, GLboolean output, char* buffer, int size, LinkProgram* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_id(sub_buffer, 50, x->cmd.id);
+        sprintf(buffer, "id %s", sub_buffer);
+    } 
+    
+    if (output){
+        sprintf(buffer, "result type %s, error code %d", result_string(x->result.type),
+                x->result.left.error);
+    }
+}
+
+void show_get_uniform_location(GLboolean input, GLboolean output, char* buffer, int size, GetUniformLocation* x) {
+    if(input) {
+        char sub_buffer[50];
+        memset(sub_buffer, 0, 50);
+        show_resource_id(sub_buffer, 50, x->cmd.program_id);
+        
+        sprintf(buffer, "program_id %s, name %s", sub_buffer, x->cmd.name);
+    }
+    
+    if(output) {
+        char output_char[50];
+        sprintf(buffer, "result type %s, error code %d, index %d", result_string(x->result.type),
+                x->result.left.error, x->result.right.index);
+        
+        strcat(buffer, output_char);
+    }
+}
 
 
 
