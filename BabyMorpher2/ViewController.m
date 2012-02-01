@@ -14,24 +14,24 @@ static Environment* _environment;
 static Command* _draw_commands;
 static Command _draw_command_list;
 static int _draw_commands_count;
-static GLKMatrix4 _modelViewProjectionMatrix;
-static GLKMatrix3 _normalMatrix;
+//static GLKMatrix4 _modelViewProjectionMatrix;
+//static GLKMatrix3 _normalMatrix;
 static char* _vertex_shader_sources[1];
 static char* _fragment_shader_sources[1];
-static Command* _model_view_get_uniform_command;
-static Command* _normal_get_uniform_command;
+//static Command* _model_view_get_uniform_command;
+//static Command* _normal_get_uniform_command;
 
 
 float _rotation;
 
 // Uniform index.
-enum
-{
-    UNIFORM_MODELVIEWPROJECTION_MATRIX,
-    UNIFORM_NORMAL_MATRIX,
-    NUM_UNIFORMS
-};
-GLint uniforms[NUM_UNIFORMS];
+//enum
+//{
+//    UNIFORM_MODELVIEWPROJECTION_MATRIX,
+//    UNIFORM_NORMAL_MATRIX,
+//    NUM_UNIFORMS
+//};
+//GLint uniforms[NUM_UNIFORMS];
 
 // Attribute index.
 enum
@@ -41,51 +41,16 @@ enum
     NUM_ATTRIBUTES
 };
 
-GLfloat gCubeVertexData[216] = 
+GLfloat gCubeVertexData[18] = 
 {
     // Data layout for each line below is:
-    // positionX, positionY, positionZ,     normalX, normalY, normalZ,
-    0.5f, -0.5f, -0.5f,        1.0f, 0.0f, 0.0f,
-    0.5f, 0.5f, -0.5f,         1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f,         1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f,         1.0f, 0.0f, 0.0f,
-    0.5f, 0.5f, 0.5f,          1.0f, 0.0f, 0.0f,
-    0.5f, 0.5f, -0.5f,         1.0f, 0.0f, 0.0f,
-    
-    0.5f, 0.5f, -0.5f,         0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f,        0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f,          0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f,          0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f,        0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f,         0.0f, 1.0f, 0.0f,
-    
-    -0.5f, 0.5f, -0.5f,        -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,       -1.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f,         -1.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f,         -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,       -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f,        -1.0f, 0.0f, 0.0f,
-    
-    -0.5f, -0.5f, -0.5f,       0.0f, -1.0f, 0.0f,
-    0.5f, -0.5f, -0.5f,        0.0f, -1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f,        0.0f, -1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f,        0.0f, -1.0f, 0.0f,
-    0.5f, -0.5f, -0.5f,        0.0f, -1.0f, 0.0f,
-    0.5f, -0.5f, 0.5f,         0.0f, -1.0f, 0.0f,
-    
-    0.5f, 0.5f, 0.5f,          0.0f, 0.0f, 1.0f,
-    -0.5f, 0.5f, 0.5f,         0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.5f,         0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.5f,         0.0f, 0.0f, 1.0f,
-    -0.5f, 0.5f, 0.5f,         0.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f,        0.0f, 0.0f, 1.0f,
-    
-    0.5f, -0.5f, -0.5f,        0.0f, 0.0f, -1.0f,
-    -0.5f, -0.5f, -0.5f,       0.0f, 0.0f, -1.0f,
-    0.5f, 0.5f, -0.5f,         0.0f, 0.0f, -1.0f,
-    0.5f, 0.5f, -0.5f,         0.0f, 0.0f, -1.0f,
-    -0.5f, -0.5f, -0.5f,       0.0f, 0.0f, -1.0f,
-    -0.5f, 0.5f, -0.5f,        0.0f, 0.0f, -1.0f
+    // positionX, positionY, pX, normalY, normalZ,
+    -0.5f,  0.5f,  0.0f,       
+     0.5f,  0.5f,  0.0f,        
+     0.5f, -0.5f,  0.0f,        
+     0.5f, -0.5f,  0.0f,        
+    -0.5f, -0.5f,  0.0f,         
+    -0.5f,  0.5f,  0.0f        
 };
 
 //static Evaluator _evaluator;
@@ -161,24 +126,16 @@ GLfloat gCubeVertexData[216] =
 
     [EAGLContext setCurrentContext:self.context];
 
-    _environment = alloc_environment(6, 4);
-    _environment->logging = GL_TRUE;
-    //_environment->logging = GL_FALSE;
+    _environment = alloc_environment(6, 6);
+    _environment->cmd_logging = GL_TRUE;
+    _environment->env_logging = GL_FALSE;
     
     //allocate all the buffers for the environment;
     const int setup_cmd_count = 40;
     Command setup_commands[setup_cmd_count];
     Command* p_setup_commands = setup_commands;   
     
-    mk_add_data(p_setup_commands, 0, 216 * sizeof(GLfloat), (char*)gCubeVertexData);
-    p_setup_commands++;
-
-    _modelViewProjectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), 1.0, 0.1f, 100.0f);
-    mk_add_data(p_setup_commands, "projection_matrix", sizeof(GLKMatrix4), (char*)_modelViewProjectionMatrix.m);
-
-    p_setup_commands++;
- 
-    mk_add_data(p_setup_commands, "normal_matrix",     sizeof(GLKMatrix3), (char*)_normalMatrix.m);
+    mk_add_data(p_setup_commands, "vertex_data", 18 * sizeof(GLfloat), (char*)gCubeVertexData);
     p_setup_commands++;
     
     p_setup_commands = [self compile_shader:p_setup_commands];
@@ -187,75 +144,46 @@ GLfloat gCubeVertexData[216] =
     p_setup_commands++;
     
     const char* name = "vertex_array";
-    
     ResourceMapper vertex_array;
     mk_resource_mapper1(&vertex_array, name);
-    
     mk_gen_vertex_arrays_oes(p_setup_commands, 1, vertex_array);
     p_setup_commands++;
     
-    ResourceId vertex_array_id;
-    vertex_array_id.type = RESOURCE_NAME;
-    vertex_array_id.name = name;
-
+    ResourceId vertex_array_id = mk_resource_id_s(name);
     mk_bind_vertex_arrays_oes(p_setup_commands, vertex_array_id);    
     p_setup_commands++;
     
     const char* vertex_buffer_name = "vertex_buffer";
-    const char** names = &vertex_buffer_name;
-    mk_gen_buffers(p_setup_commands, 1, names);
+    mk_gen_buffers(p_setup_commands, 1, &vertex_buffer_name);
     p_setup_commands++;
     
-    
-    ResourceId r;
-    r.type = RESOURCE_NAME;
-    r.name = "vertex_buffer";
-    mk_bind_buffer(p_setup_commands, ARRAY_BUFFER, r);
-    
-    MemoryLocation vertex_data_location;
-    vertex_data_location.id = 0;
-    vertex_data_location.offset = 0;
-
+    ResourceId r = mk_resource_id_s(vertex_buffer_name);    
     mk_bind_buffer(p_setup_commands, ARRAY_BUFFER, r);
     p_setup_commands++;
     
-    mk_buffer_data(p_setup_commands, ARRAY_BUFFER, sizeof(gCubeVertexData), vertex_data_location, STATIC_DRAW);
+    MemoryLocation vertex_data_location = mk_memory_location("vertex_data", 0);
+    mk_buffer_data(p_setup_commands, ARRAY_BUFFER, sizeof(GLfloat) * 18, vertex_data_location, STATIC_DRAW);
     p_setup_commands++;
 
     mk_enable_vertex_attrib_array(p_setup_commands, GLKVertexAttribPosition);
     p_setup_commands++;
 
-    mk_vertex_attrib_pointer(p_setup_commands, GLKVertexAttribPosition, 3, VAP_FLOAT, 0, 24, 
-                             vertex_data_location);
-    p_setup_commands++;
-    
-    mk_enable_vertex_attrib_array(p_setup_commands, GLKVertexAttribNormal);
-    p_setup_commands++;
-
-    MemoryLocation normals_location;
-    normals_location.id     = 0;
-    normals_location.offset = 12;
-    
-    mk_vertex_attrib_pointer(p_setup_commands, GLKVertexAttribNormal, 3, VAP_FLOAT, GL_FALSE, 24, 
-                             normals_location);
+    mk_vertex_attrib_pointer(p_setup_commands, GLKVertexAttribPosition, 3, VAP_FLOAT, 0, 12, 0);
     p_setup_commands++;
          
     ResourceId empty_resource_id;
     empty_resource_id.id = 0;
     empty_resource_id.type = RESOURCE_ID;
-    
     mk_bind_vertex_arrays_oes(p_setup_commands, empty_resource_id);
     p_setup_commands++;
         
     Command setup_command_list;
-    int actually_count = ((long long)p_setup_commands - (long long)setup_commands) / sizeof(Command);
-    mk_command_list(&setup_command_list, setup_commands, actually_count);
+    int actual_count = ((long long)p_setup_commands - (long long)setup_commands) / sizeof(Command);
+    mk_command_list(&setup_command_list, setup_commands, actual_count);
         
     //I think I need to evaluate this thing and get out the results
     evaluate(_environment, &setup_command_list);
-    
-    //uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX] = _model_view_get_uniform_command->get_uniform_location.result.right.index;
-    //uniforms[UNIFORM_NORMAL_MATRIX]              = _normal_get_uniform_command->get_uniform_location.result.right.index;
+
     
     //DRAW COMMANDS
     _draw_commands_count = 10;
@@ -269,26 +197,14 @@ GLfloat gCubeVertexData[216] =
     mk_clear(p_draw_commands, COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     p_draw_commands++;
     
-    ResourceId program_id = mk_resource_id_s("program");
-    
     mk_bind_vertex_arrays_oes(p_draw_commands, vertex_array_id);
     p_draw_commands++;
-    
+
+    ResourceId program_id = mk_resource_id_s("program");
     mk_use_program(p_draw_commands, program_id);
     p_draw_commands++;
             
-    //MemoryLocation project_matrix = mk_memory_location("projection_matrix", 0);
-    //mk_uniform_matrix(p_draw_commands, MATRIX_UNIFORM_4X4, uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 
-    //                  0, project_matrix);
-    //p_draw_commands++;
-    
-    //MemoryLocation normal_matrix = mk_memory_location("normal_matrix", 0);
-    //mk_uniform_matrix(p_draw_commands, MATRIX_UNIFORM_3X3, 
-     //                 uniforms[UNIFORM_NORMAL_MATRIX], 1, 
-     //                 0, normal_matrix);
-    //p_draw_commands++;
-
-    mk_draw_arrays(p_draw_commands, TRIANGLES, 0, 36);
+    mk_draw_arrays(p_draw_commands, TRIANGLES, 0, 6);
     p_draw_commands++;
 
     int draw_commands = ((long long)p_draw_commands - (long long)_draw_commands) / sizeof(Command);
@@ -308,6 +224,7 @@ GLfloat gCubeVertexData[216] =
 
 - (void)update
 {
+    /*
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
     GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
     
@@ -328,11 +245,12 @@ GLfloat gCubeVertexData[216] =
     modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, 1.0f, 1.0f);
     modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
     
-    _normalMatrix = GLKMatrix3InvertAndTranspose(GLKMatrix4GetMatrix3(modelViewMatrix), NULL);
+    //_normalMatrix = GLKMatrix3InvertAndTranspose(GLKMatrix4GetMatrix3(modelViewMatrix), NULL);
     
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
+    //_modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
     
     _rotation += self.timeSinceLastUpdate * 0.5f;
+     */
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
@@ -408,8 +326,8 @@ GLfloat gCubeVertexData[216] =
     mk_bind_attrib_location(p_shader_commands, "program", ATTRIB_VERTEX, "position"); 
     p_shader_commands++;
     
-    mk_bind_attrib_location(p_shader_commands, "program", ATTRIB_NORMAL, "normal");
-    p_shader_commands++;
+    //mk_bind_attrib_location(p_shader_commands, "program", ATTRIB_NORMAL, "normal");
+    //p_shader_commands++;
     
     // Link program.
     p_shader_commands = [self linkProgram:p_shader_commands prog:"program"];

@@ -34,7 +34,9 @@ typedef struct Environment_t {
     int resource_mapping_count;
     int resource_mapping_capacity;
     
-    GLboolean logging;
+    GLboolean cmd_logging;
+    GLboolean env_logging;
+    
 } Environment;
 
 void show_environment(char* buffer, int size, Environment* environment);

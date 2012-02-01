@@ -80,12 +80,15 @@ void evaluate(Environment* environment, Command* command) {
             break;
             
         case BINDBUFFER:
-            glBindBuffer(buffer_target_gl_enum(command->bind_buffer.cmd.buffer_target), 
-                         from_resource_id(environment, command->bind_buffer.cmd.id));
+        {
+            GLuint id = from_resource_id(environment, command->bind_buffer.cmd.id);
+            GLenum target = buffer_target_gl_enum(command->bind_buffer.cmd.buffer_target); 
+            glBindBuffer(target, id);
             
             command->bind_buffer.result.left.error = glGetError();
             command->bind_buffer.result.type = command->bind_buffer.result.left.error == GL_NO_ERROR ? 
                                                     RESULT_SUCCESS : RESULT_ERROR;
+        }
             
             break;
             
@@ -111,7 +114,7 @@ void evaluate(Environment* environment, Command* command) {
                                   vap_to_gl_enum(command->vertex_attrib_pointer.cmd.type), 
                                   command->vertex_attrib_pointer.cmd.normalized,
                                   command->vertex_attrib_pointer.cmd.stride, 
-                                  from_memory_location(environment, command->vertex_attrib_pointer.cmd.memory_location));
+                                  (void*)command->vertex_attrib_pointer.cmd.offset);
 
             command->vertex_attrib_pointer.result.left.error = glGetError();
             command->vertex_attrib_pointer.result.type = command->vertex_attrib_pointer.result.left.error == GL_NO_ERROR ? 
@@ -359,6 +362,7 @@ GLuint get_mapping(Environment* environment, const char* name) {
         }
     }
     
+    assert(0);
     return -1;
 }
 
@@ -395,7 +399,7 @@ void* from_memory_location(Environment* environment, MemoryLocation memory_locat
         Resource resource = environment->resources[i];
         
         if (resource.id == memory_location.id) {
-            return &resource.buffer[memory_location.offset];
+            return resource.buffer + memory_location.offset;
         }
     }
     
@@ -419,32 +423,36 @@ void update_resource(Environment* env, const char* id, const char* data,
 }
 
 void log_input(Environment* env, Command* command) {
-    if (env->logging) {
+    if (env->cmd_logging) {
         char buffer[512];
         memset(buffer, 0, 512);
         show_command(GL_TRUE, GL_FALSE, buffer, 512, command);
-        
+        printf("%s\n", buffer);
+    }
+    
+    if(env->env_logging) {
         char env_buffer[256];
         memset(env_buffer, 0, 256);
         show_environment(env_buffer, 256, env);
-        
-        printf("%s\n, %s\n", env_buffer, buffer);
-        fflush(stdout);
+        printf("%s\n", env_buffer);
     }
+
 }
 
 void log_output(Environment* env, Command* command) {
-    if (env->logging) {
+    if (env->cmd_logging) {
         char buffer[512];
         memset(buffer, 0, 512);
         show_command(GL_FALSE, GL_TRUE, buffer, 512, command);
-        
+        printf("%s\n", buffer);
+    }
+    
+    if (env->env_logging) {        
         char env_buffer[256];
         memset(env_buffer, 0, 256);
         show_environment(env_buffer, 256, env);
         
-        printf("%s\n, %s\n", env_buffer, buffer);
-        fflush(stdout);
+        printf("%s\n", env_buffer);
     }
 }
 

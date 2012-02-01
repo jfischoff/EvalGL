@@ -190,7 +190,7 @@ void mk_gen_buffers(Command* cmd, int count, const char** names) {
         cmd->gen_buffers.cmd.mapper.names[i] = names[i];
     }
     cmd->gen_buffers.cmd.mapper.count = count;
-    cmd->gen_buffers.cmd.mapper.map_resource = names == 0 ? GL_TRUE : GL_FALSE;
+    cmd->gen_buffers.cmd.mapper.map_resource = names != 0 ? GL_TRUE : GL_FALSE;
 }
 
 void mk_delete_buffers(Command* cmd, int count, ResourceId* resources) {
@@ -217,14 +217,14 @@ void mk_vertex_attrib_pointer(Command* cmd, GLuint index,
                               VAP_EType type,
                               GLboolean normalized,
                               GLsizei stride,
-                              MemoryLocation memory_location) {
+                              GLuint offset) {
     cmd->type                                  = VERTEX_ATTRIB_POINTER;
     cmd->vertex_attrib_pointer.cmd.index           = index;
     cmd->vertex_attrib_pointer.cmd.size            = size;
     cmd->vertex_attrib_pointer.cmd.type            = type;
     cmd->vertex_attrib_pointer.cmd.normalized      = normalized;
     cmd->vertex_attrib_pointer.cmd.stride          = stride;
-    cmd->vertex_attrib_pointer.cmd.memory_location = memory_location;
+    cmd->vertex_attrib_pointer.cmd.offset          = offset;
     
 }
 
@@ -582,13 +582,11 @@ void show_buffer_data(GLboolean input, GLboolean output, char* buffer, int size,
 
 void show_vertex_attrib_pointer(GLboolean input, GLboolean output, char* buffer, int size, VertexAttribPointer* x) {
     if(input) {
-        char sub_buffer[50];
-        memset(sub_buffer, 0, 50);
-        show_memory_location(buffer, x->cmd.memory_location);
         
-        sprintf(buffer, "index %d, size %d, type %s, normalized %d, stride %d, memory_location %s",
+        
+        sprintf(buffer, "index %d, size %d, type %s, normalized %d, stride %d, memory_location %d",
                 x->cmd.index, x->cmd.size, vap_string(x->cmd.type), x->cmd.normalized, 
-                x->cmd.stride, sub_buffer);
+                x->cmd.stride, x->cmd.offset);
     }
     
     if(output){

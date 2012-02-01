@@ -155,7 +155,7 @@ typedef struct VertexAttribPointer_t {
         VAP_EType       type;
         GLboolean  	normalized;
         GLsizei  	stride;
-        MemoryLocation memory_location;
+        GLuint      offset;
     } cmd;
     
     struct {
@@ -609,7 +609,7 @@ typedef enum {
     SHADER_SOURCE,
     COMPILE_SHADER,
     LINK_PROGRAM,
-    GET_UNIFORM_LOCATION
+    GET_UNIFORM_LOCATION,
     
 } ECommandType;
 
@@ -663,7 +663,7 @@ void mk_vertex_attrib_pointer(Command* cmd, GLuint index,
                               VAP_EType type,
                               GLboolean normalized,
                               GLsizei stride,
-                              MemoryLocation memory_location);
+                              GLuint offset);
 void mk_gen_vertex_arrays_oes(Command* cmd, GLuint count, ResourceMapper mapper);
 void mk_bind_vertex_arrays_oes(Command* cmd, ResourceId id);
 void mk_enable_vertex_attrib_array(Command* cmd, GLuint index);
