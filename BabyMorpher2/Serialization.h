@@ -136,6 +136,8 @@ void set_next_union_index(ParserState* state);
 
 int get_version(const char* buffer);
 
+void* load_in_place(char* buffer);
+
 //SERIALIZATION FUNCTIONS
 
 typedef struct SerializationState_t {

@@ -298,6 +298,82 @@ int array_test[3] = {0,1,3};
     
 }
 
+typedef struct TestObject_t {
+    int x;
+    char y;
+    float z;
+} TestObject;
+
+typedef struct TestList_t {
+    char x;
+    TestObject* objects;
+    int count;
+} TestList;
+
+- (void)testLoadInPlace {
+    const int header_size = 4 + 4 + (2 * 4);
+    
+    const int size = (sizeof(TestObject) * 2) + 
+        (sizeof(TestList) + header_size);
+    char buffer[size];
+    int* int_p = (int*)buffer;
+    
+    *int_p = 1;
+    int_p++;
+    
+    *int_p = 2;
+    int_p++;
+        
+    TestObject a = {438129054, 'a', 1.5f};
+    TestObject b = {102, 'b', 5.5f};
+    
+    TestObject list[] = {
+        a, 
+        b
+    };
+    
+    TestList test_list = {'t', list, 2};
+    
+    int test_list_start = header_size + (sizeof(TestObject) * 2);
+    int test_list_list_start = test_list_start + (((char*)&test_list.objects) - ((char*)&test_list));
+    
+    *int_p = test_list_list_start;
+    int_p++;
+    
+    *int_p = test_list_list_start + 1;
+    int_p++;
+    
+    char* write_head = buffer + header_size;
+
+    int offset_a = (write_head + sizeof(TestList)) - buffer;
+    int offset_b = (write_head + sizeof(TestList) + sizeof(TestObject)) - buffer;
+    
+    ((int*)test_list.objects)[0] = offset_a;
+    ((int*)test_list.objects)[1] = offset_b;
+    memcpy(write_head, &test_list, sizeof(TestList));
+    write_head += sizeof(TestList);
+    
+    memcpy(write_head, &a, sizeof(TestObject));
+    write_head += sizeof(TestObject);
+
+  
+    memcpy(write_head, &b, sizeof(TestObject));
+    write_head += sizeof(TestObject);    
+    
+    TestList* result = load_in_place(buffer);
+    
+    STAssertTrue(result->count == test_list.count, @"count not equal");
+    
+    STAssertTrue(result->objects[0].x == test_list.objects[0].x, @" first object not equal");
+    STAssertTrue(result->objects[0].y == test_list.objects[0].y, @" first object not equal");
+    STAssertTrue(result->objects[0].z == test_list.objects[0].z, @" first object not equal");
+    
+    STAssertTrue(result->objects[1].x == test_list.objects[1].x, @" second object not equal");
+    STAssertTrue(result->objects[1].y == test_list.objects[1].y, @" second object not equal");
+    STAssertTrue(result->objects[1].z == test_list.objects[1].z, @" second object not equal");
+    
+}
+
 //after this code 
 //write the haskell code for making the file
 //there is a platform specific format for reading this stuff
