@@ -13,16 +13,16 @@
 
 
 typedef struct Resource_t {
-    const char* id;
+    Id id;
     char* buffer;
     int count;
 } Resource;
 
-Resource mk_resource(const char* id, char* buffer, int count);
+Resource mk_resource(Id id, char* buffer, int count);
 
 typedef struct ResourceMapping_t {
     GLuint id;
-    const char* name;
+    Id name;
 } ResourceMapping;
 
 typedef struct Environment_t {
@@ -49,14 +49,14 @@ Environment* alloc_environment(int resource_capacity, int resource_mapping_count
 void free_environment(Environment* env);
 
 void   evaluate(Environment* environment, Command* cmd_and_result);
-void   add_mapping(Environment* environment, const char* name, GLuint id);
-GLuint get_mapping(Environment* environment, const char* name);
+void   add_mapping(Environment* environment, Id name, GLuint id);
+GLuint get_mapping(Environment* environment, Id name);
 GLuint from_resource_id(Environment* environment, ResourceId resource_id);
 void   map_result(Environment* environment, GLuint* resources, int count, ResourceMapper resource_mapper);
 void*  from_memory_location(Environment* environment, MemoryLocation memory_location);
 void   add_resource(Environment* env, Resource resource);   
-void delete_resource(Environment* env, const char* id);
-void update_resource(Environment* env, const char* id, const char* data, int count);
+void delete_resource(Environment* env, Id id);
+void update_resource(Environment* env, Id id, const char* data, int count);
 void   log_input(Environment* env, Command* command);
 void   log_output(Environment* env, Command* command);
 

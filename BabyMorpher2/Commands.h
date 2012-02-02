@@ -46,6 +46,7 @@ typedef enum {
     TRIANGLES
 } DrawComponent;
 
+typedef int Id;
 
 typedef enum { 
     ARRAY_BUFFER,
@@ -54,7 +55,7 @@ typedef enum {
 
 typedef struct ResourceMapper_t {
     GLboolean map_resource;
-    const char* names[MAX_RESOURCE_COUNT];   
+    Id names[MAX_RESOURCE_COUNT];   
     int count;
 } ResourceMapper;
 
@@ -66,14 +67,14 @@ typedef enum EResourceType_t {
 typedef struct ResourceId_t {    
     EResourceType type;
     union {
-        const char* name;
+        Id name;
         GLuint id;
     };
     
 } ResourceId;
 
 typedef struct MemoryLocation_t {
-    const char* id;
+    Id id;
     int offset;
 } MemoryLocation;
 
@@ -175,7 +176,7 @@ typedef enum {
 
 typedef struct AddData_t {
     struct {
-        const char* id;
+        Id id;
         int count;
         char* buffer;
     } cmd;
@@ -197,7 +198,7 @@ typedef enum {
 
 typedef struct DeleteData_t {
     struct {
-        const char* id;
+        Id id;
     } cmd;
     
     struct {
@@ -215,7 +216,7 @@ typedef enum {
 
 typedef struct UpdateData_t {
     struct {
-        const char* id;
+        Id id;
         int count;
         char* buffer;
     } cmd;
@@ -646,14 +647,14 @@ typedef struct Command_t {
     };
 } Command;
 
-ResourceId mk_resource_id_s(const char* name);
-void mk_resource_mapper1(ResourceMapper* mapper, const char* name);
+ResourceId mk_resource_id_s(Id name);
+void mk_resource_mapper1(ResourceMapper* mapper, Id name);
 
-void mk_add_data(Command* cmd, const char*  id, int count, char* buffer);
-void mk_delete_data(Command* cmd, const char*  id);
-void mk_update_data(Command* cmd, const char*  id, int count, char* buffer);
+void mk_add_data(Command* cmd, Id id, int count, char* buffer);
+void mk_delete_data(Command* cmd, Id id);
+void mk_update_data(Command* cmd, Id id, int count, char* buffer);
 void mk_enable(Command* cmd, EnableEnums type);
-void mk_gen_buffers(Command* cmd, int count, const char** name);
+void mk_gen_buffers(Command* cmd, int count, Id* name);
 void mk_delete_buffers(Command* cmd, int count, ResourceId* resources);
 void mk_bind_buffer(Command* cmd, BufferTarget target, ResourceId id);
 void mk_buffer_data(Command* cmd, BufferTarget buffer_target, GLuint size, MemoryLocation memory_location,
@@ -674,15 +675,15 @@ void mk_use_program(Command* cmd, ResourceId id);
 void mk_uniform_matrix(Command* cmd, MatrixUniformType uniform_type, GLuint uniform_index, int count, 
                        GLboolean transpose, MemoryLocation value);
 void mk_command_list(Command* cmd, Command* commands, int count);
-void mk_attack_shader(Command* cmd, const char* program, const char* shader);
-void mk_bind_attrib_location(Command* cmd, const char* program, GLuint index, const char* name); 
-void mk_create_program(Command* cmd, const char* program);
-void mk_create_shader(Command* cmd, const char* shader, EShaderType shader_type);
-void mk_shader_source(Command* cmd, const char* shader, GLint count, MemoryLocation source_location, GLint* length);
-void mk_compile_shader(Command* cmd, const char* shader);
-void mk_link_program(Command* cmd, const char* prog);
-void mk_get_uniform_location(Command* cmd, const char* prog, const char* name);
-MemoryLocation mk_memory_location(const char* id, int offset);
+void mk_attack_shader(Command* cmd, Id program, Id shader);
+void mk_bind_attrib_location(Command* cmd, Id program, GLuint index, const char* name); 
+void mk_create_program(Command* cmd, Id program);
+void mk_create_shader(Command* cmd, Id shader, EShaderType shader_type);
+void mk_shader_source(Command* cmd, Id shader, GLint count, MemoryLocation source_location, GLint* length);
+void mk_compile_shader(Command* cmd, Id shader);
+void mk_link_program(Command* cmd, Id prog);
+void mk_get_uniform_location(Command* cmd, Id prog, const char* name);
+MemoryLocation mk_memory_location(Id id, int offset);
 
 //enum conversion
 EShaderType gl_enum_to_shader_type(GLenum type);

@@ -11,6 +11,7 @@
 		63A21D4914D6EE99007FF709 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 63A21D4814D6EE99007FF709 /* Commands.c */; };
 		63A21D4A14D712A5007FF709 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 63A21D4814D6EE99007FF709 /* Commands.c */; };
 		63A21D4D14D722CE007FF709 /* Evaluator.c in Sources */ = {isa = PBXBuildFile; fileRef = 63A21D4C14D722CE007FF709 /* Evaluator.c */; };
+		63A21D6D14D9B230007FF709 /* Serialization.c in Sources */ = {isa = PBXBuildFile; fileRef = 63A21D6C14D9B230007FF709 /* Serialization.c */; };
 		63C6689114D4EE3800E24065 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C6689014D4EE3800E24065 /* UIKit.framework */; };
 		63C6689314D4EE3800E24065 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C6689214D4EE3800E24065 /* Foundation.framework */; };
 		63C6689514D4EE3800E24065 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C6689414D4EE3800E24065 /* CoreGraphics.framework */; };
@@ -46,6 +47,8 @@
 		63A21D4814D6EE99007FF709 /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Commands.c; sourceTree = "<group>"; };
 		63A21D4B14D722AA007FF709 /* Evaluator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Evaluator.h; sourceTree = "<group>"; };
 		63A21D4C14D722CE007FF709 /* Evaluator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Evaluator.c; sourceTree = "<group>"; };
+		63A21D6B14D9B217007FF709 /* Serialization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Serialization.h; sourceTree = "<group>"; };
+		63A21D6C14D9B230007FF709 /* Serialization.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Serialization.c; sourceTree = "<group>"; };
 		63C6688C14D4EE3800E24065 /* BabyMorpher2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BabyMorpher2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63C6689014D4EE3800E24065 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		63C6689214D4EE3800E24065 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -150,6 +153,8 @@
 				63A21CFA14D5EC93007FF709 /* PasteBin */,
 				63A21D4B14D722AA007FF709 /* Evaluator.h */,
 				63A21D4C14D722CE007FF709 /* Evaluator.c */,
+				63A21D6B14D9B217007FF709 /* Serialization.h */,
+				63A21D6C14D9B230007FF709 /* Serialization.c */,
 			);
 			path = BabyMorpher2;
 			sourceTree = "<group>";
@@ -299,6 +304,7 @@
 				63C668AC14D4EE3800E24065 /* ViewController.m in Sources */,
 				63C668D314D5EAF400E24065 /* CommandMakers.cpp in Sources */,
 				63A21D4D14D722CE007FF709 /* Evaluator.c in Sources */,
+				63A21D6D14D9B230007FF709 /* Serialization.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

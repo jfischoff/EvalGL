@@ -135,7 +135,7 @@ GLfloat gCubeVertexData[18] =
     Command setup_commands[setup_cmd_count];
     Command* p_setup_commands = setup_commands;   
     
-    mk_add_data(p_setup_commands, "vertex_data", 18 * sizeof(GLfloat), (char*)gCubeVertexData);
+    mk_add_data(p_setup_commands, (int)"vertex_data", 18 * sizeof(GLfloat), (char*)gCubeVertexData);
     p_setup_commands++;
     
     p_setup_commands = [self compile_shader:p_setup_commands];
@@ -145,23 +145,23 @@ GLfloat gCubeVertexData[18] =
     
     const char* name = "vertex_array";
     ResourceMapper vertex_array;
-    mk_resource_mapper1(&vertex_array, name);
+    mk_resource_mapper1(&vertex_array, (int)name);
     mk_gen_vertex_arrays_oes(p_setup_commands, 1, vertex_array);
     p_setup_commands++;
     
-    ResourceId vertex_array_id = mk_resource_id_s(name);
+    ResourceId vertex_array_id = mk_resource_id_s((int)name);
     mk_bind_vertex_arrays_oes(p_setup_commands, vertex_array_id);    
     p_setup_commands++;
     
-    const char* vertex_buffer_name = "vertex_buffer";
+    int vertex_buffer_name = (int)"vertex_buffer";
     mk_gen_buffers(p_setup_commands, 1, &vertex_buffer_name);
     p_setup_commands++;
     
-    ResourceId r = mk_resource_id_s(vertex_buffer_name);    
+    ResourceId r = mk_resource_id_s((int)vertex_buffer_name);    
     mk_bind_buffer(p_setup_commands, ARRAY_BUFFER, r);
     p_setup_commands++;
     
-    MemoryLocation vertex_data_location = mk_memory_location("vertex_data", 0);
+    MemoryLocation vertex_data_location = mk_memory_location((int)"vertex_data", 0);
     mk_buffer_data(p_setup_commands, ARRAY_BUFFER, sizeof(GLfloat) * 18, vertex_data_location, STATIC_DRAW);
     p_setup_commands++;
 
@@ -200,7 +200,7 @@ GLfloat gCubeVertexData[18] =
     mk_bind_vertex_arrays_oes(p_draw_commands, vertex_array_id);
     p_draw_commands++;
 
-    ResourceId program_id = mk_resource_id_s("program");
+    ResourceId program_id = mk_resource_id_s((int)"program");
     mk_use_program(p_draw_commands, program_id);
     p_draw_commands++;
             
@@ -260,7 +260,7 @@ GLfloat gCubeVertexData[18] =
 
 -(Command*)compile_shader:(Command*)p_shader_commands {
 
-    mk_create_program(p_shader_commands, "program");
+    mk_create_program(p_shader_commands, (int)"program");
     p_shader_commands++;
     
     // Create and compile vertex shader.
@@ -270,7 +270,7 @@ GLfloat gCubeVertexData[18] =
 
     
     MemoryLocation vertex_shader_source;
-    vertex_shader_source.id     = "vertex_shader_source";
+    vertex_shader_source.id     = (int)"vertex_shader_source";
     vertex_shader_source.offset = 0;
     
     //I need to copy the source into a buffer that does not go away
@@ -283,7 +283,7 @@ GLfloat gCubeVertexData[18] =
     _vertex_shader_sources[0] = malloc(strlen(source) + 1);
     strcpy(_vertex_shader_sources[0], source);
     
-    mk_add_data(p_shader_commands, "vertex_shader_source", 1, (char*)_vertex_shader_sources);
+    mk_add_data(p_shader_commands, (int)"vertex_shader_source", 1, (char*)_vertex_shader_sources);
     p_shader_commands++;
     
     p_shader_commands = [self compile_shader:p_shader_commands shader:"vertex_shader" type:GL_VERTEX_SHADER memory_location:vertex_shader_source];
@@ -296,7 +296,7 @@ GLfloat gCubeVertexData[18] =
     // Create and compile fragment shader.
     NSString* fragShaderPathname = [[NSBundle mainBundle] pathForResource:@"Shader" ofType:@"fsh"];
     MemoryLocation fragment_shader_source;
-    fragment_shader_source.id = "fragment_shader_source";
+    fragment_shader_source.id = (int)"fragment_shader_source";
     fragment_shader_source.offset = 0;
     
     GLchar* frag_source = (GLchar *)[[NSString stringWithContentsOfFile:fragShaderPathname encoding:NSUTF8StringEncoding error:nil] UTF8String];
@@ -308,7 +308,7 @@ GLfloat gCubeVertexData[18] =
     _fragment_shader_sources[0] = malloc(strlen(frag_source) + 1);
     strcpy(_fragment_shader_sources[0], frag_source);
     
-    mk_add_data(p_shader_commands, "fragment_shader_source", 1, (char*)_fragment_shader_sources);
+    mk_add_data(p_shader_commands, (int)"fragment_shader_source", 1, (char*)_fragment_shader_sources);
     p_shader_commands++;
     
     p_shader_commands = [self compile_shader:p_shader_commands shader:"fragment_shader" type:GL_FRAGMENT_SHADER memory_location:fragment_shader_source];
@@ -317,13 +317,13 @@ GLfloat gCubeVertexData[18] =
         return NO;
     }
 
-    mk_attack_shader(p_shader_commands, "program", "vertex_shader");
+    mk_attack_shader(p_shader_commands, (int)"program", (int)"vertex_shader");
     p_shader_commands++;
 
-    mk_attack_shader(p_shader_commands, "program", "fragment_shader");
+    mk_attack_shader(p_shader_commands, (int)"program", (int)"fragment_shader");
     p_shader_commands++;
     
-    mk_bind_attrib_location(p_shader_commands, "program", ATTRIB_VERTEX, "position"); 
+    mk_bind_attrib_location(p_shader_commands, (int)"program", ATTRIB_VERTEX, "position"); 
     p_shader_commands++;
     
     //mk_bind_attrib_location(p_shader_commands, "program", ATTRIB_NORMAL, "normal");
@@ -378,15 +378,15 @@ GLfloat gCubeVertexData[18] =
 -(Command*)compile_shader:(Command*)p_commands shader:(const char*)shader type:(GLenum)type memory_location:(MemoryLocation)memory_location
 {
     //*shader = glCreateShader(type);
-    mk_create_shader(p_commands, shader, gl_enum_to_shader_type(type));
+    mk_create_shader(p_commands, (int)shader, gl_enum_to_shader_type(type));
     p_commands++;
     
     //glShaderSource(*shader, 1, &source, NULL);
-    mk_shader_source(p_commands,shader, 1, memory_location, NULL);
+    mk_shader_source(p_commands, (int)shader, 1, memory_location, NULL);
     p_commands++;
     
     //glCompileShader(*shader);
-    mk_compile_shader(p_commands, shader);
+    mk_compile_shader(p_commands, (int)shader);
     p_commands++;
     
 #if defined(DEBUG)
@@ -413,7 +413,7 @@ GLfloat gCubeVertexData[18] =
 
 - (Command*)linkProgram:(Command*)p_commands prog:(const char*)prog
 {
-    mk_link_program(p_commands, prog);
+    mk_link_program(p_commands, (int)prog);
     p_commands++;
     
 #if defined(DEBUG)

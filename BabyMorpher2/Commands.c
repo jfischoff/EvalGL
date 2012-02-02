@@ -147,32 +147,32 @@ GLenum shader_type_to_gl_enum(EShaderType shader_type) {
     return GL_INVALID_ENUM;
 }
 
-ResourceId mk_resource_id_s(const char* name) {
+ResourceId mk_resource_id_s(Id name) {
     ResourceId id;
     id.type = RESOURCE_NAME;
     id.name = name;
     return id;
 }
 
-void mk_resource_mapper1(ResourceMapper* mapper, const char* name) {
+void mk_resource_mapper1(ResourceMapper* mapper, Id name) {
     mapper->names[0] = name;
     mapper->map_resource = GL_TRUE;
     mapper->count = 1;
 }
 
-void mk_add_data(Command* cmd, const char* id, int count, char* buffer) {
+void mk_add_data(Command* cmd, Id id, int count, char* buffer) {
     cmd->type                   = ADDDATA;
     cmd->add_data.cmd.buffer    = buffer;
     cmd->add_data.cmd.count     = count;
     cmd->add_data.cmd.id        = id;
 }
 
-void mk_delete_data(Command* cmd, const char* id) {
+void mk_delete_data(Command* cmd, Id id) {
     cmd->type = DELETEDATA;
     cmd->delete_data.cmd.id = id;
 }
 
-void mk_update_data(Command* cmd, const char* id, int count, char* buffer) {
+void mk_update_data(Command* cmd, Id id, int count, char* buffer) {
     cmd->update_data.cmd.id     = id;
     cmd->update_data.cmd.count  = count;
     cmd->update_data.cmd.buffer = buffer; 
@@ -183,7 +183,7 @@ void mk_enable(Command* cmd, EnableEnums type) {
     cmd->enable.cmd.state = E_GL_DEPTH_TEST;
 }
 
-void mk_gen_buffers(Command* cmd, int count, const char** names) {
+void mk_gen_buffers(Command* cmd, int count, Id* names) {
     cmd->type                     = GENBUFFERS;
     cmd->gen_buffers.cmd.count        = count;
     for (int i = 0; i < count; i++) {
@@ -285,7 +285,7 @@ void mk_command_list(Command* cmd, Command* commands, int count) {
     cmd->command_list.cmd.commands  = commands;
 }
 
-void mk_attack_shader(Command* cmd, const char* program, const char* shader) {
+void mk_attack_shader(Command* cmd, Id program, Id shader) {
     cmd->type = ATTACH_SHADER;
     
     ResourceId program_id = mk_resource_id_s(program);
@@ -295,7 +295,7 @@ void mk_attack_shader(Command* cmd, const char* program, const char* shader) {
     cmd->attach_shader.cmd.shader_id = shader_id;
 }
 
-void mk_bind_attrib_location(Command* cmd, const char* program, GLuint index, const char* name) {
+void mk_bind_attrib_location(Command* cmd, Id program, GLuint index, const char* name) {
     cmd->type = BIND_ATTRIBUTE_LOCATION;
     
     ResourceId program_id = mk_resource_id_s(program);
@@ -304,7 +304,7 @@ void mk_bind_attrib_location(Command* cmd, const char* program, GLuint index, co
     cmd->bind_attrib_location.cmd.name = name;
 }
 
-void mk_create_program(Command* cmd, const char* program) {
+void mk_create_program(Command* cmd, Id program) {
     cmd->type = CREATE_PROGRAM;
     
     ResourceMapper rm;
@@ -312,7 +312,7 @@ void mk_create_program(Command* cmd, const char* program) {
     cmd->create_program.cmd.mapper = rm;
 }
 
-void mk_create_shader(Command* cmd, const char* shader, EShaderType shader_type) {
+void mk_create_shader(Command* cmd, Id shader, EShaderType shader_type) {
     cmd->type = CREATE_SHADER;
     
     ResourceMapper rm; 
@@ -321,7 +321,7 @@ void mk_create_shader(Command* cmd, const char* shader, EShaderType shader_type)
     cmd->create_shader.cmd.mapper = rm;
 }
 
-void mk_shader_source(Command* cmd, const char* shader, GLint count, MemoryLocation source_location, GLint* length) {
+void mk_shader_source(Command* cmd, Id shader, GLint count, MemoryLocation source_location, GLint* length) {
     cmd->type = SHADER_SOURCE;
     
     ResourceId shader_id = mk_resource_id_s(shader);
@@ -331,25 +331,25 @@ void mk_shader_source(Command* cmd, const char* shader, GLint count, MemoryLocat
     cmd->shader_source.cmd.length = length;
 }
 
-void mk_compile_shader(Command* cmd, const char* shader) {
+void mk_compile_shader(Command* cmd, Id shader) {
     cmd->type = COMPILE_SHADER;
     
     ResourceId shader_id = mk_resource_id_s(shader);
     cmd->compile_shader.cmd.id = shader_id;
 }
 
-void mk_link_program(Command* cmd, const char* prog) {
+void mk_link_program(Command* cmd, Id prog) {
     cmd->type = LINK_PROGRAM;
     ResourceId program_id = mk_resource_id_s(prog);
     cmd->link_program.cmd.id = program_id;
 }
 
-MemoryLocation mk_memory_location(const char* id, int offset) {
+MemoryLocation mk_memory_location(Id id, int offset) {
     MemoryLocation ml = {id, offset};
     return ml;
 }
 
-void mk_get_uniform_location(Command* cmd, const char* prog, const char* name) {
+void mk_get_uniform_location(Command* cmd, Id prog, const char* name) {
     cmd->type = GET_UNIFORM_LOCATION;
     cmd->get_uniform_location.cmd.program_id = mk_resource_id_s(prog);
     cmd->get_uniform_location.cmd.name = name;
@@ -476,7 +476,7 @@ void show_command(GLboolean input, GLboolean output, char* buffer, int size, Com
 
 void show_add_data(GLboolean input, GLboolean output, char* buffer, int size, AddData* add_data) {
     if(input) {
-        sprintf(buffer, "id %s, count %d, data %d", add_data->cmd.id, 
+        sprintf(buffer, "id %d, count %d, data %d", add_data->cmd.id, 
             add_data->cmd.count, (int)add_data->cmd.buffer);
     }
     
@@ -488,7 +488,7 @@ void show_add_data(GLboolean input, GLboolean output, char* buffer, int size, Ad
 
 void show_delete_data(GLboolean input, GLboolean output, char* buffer, int size, DeleteData* delete_data) {
     if(input) {
-        sprintf(buffer, "id %s", delete_data->cmd.id); 
+        sprintf(buffer, "id %d", delete_data->cmd.id); 
     }
     
     if(output){
@@ -498,7 +498,7 @@ void show_delete_data(GLboolean input, GLboolean output, char* buffer, int size,
 
 void show_update_data(GLboolean input, GLboolean output, char* buffer, int size, UpdateData* x) {
     if(input) {
-        sprintf(buffer, "id %s", x->cmd.id);  
+        sprintf(buffer, "id %d", x->cmd.id);  
     }
     
     if(output){
@@ -651,7 +651,7 @@ void show_resource_id(char* buffer, int size, ResourceId resource_id) {
     if (resource_id.type == RESOURCE_ID) {
         sprintf(buffer, "id %d", resource_id.id);
     } else {
-        sprintf(buffer, "name %s", resource_id.name);
+        sprintf(buffer, "name %d", resource_id.name);
     }
 }
 
@@ -660,7 +660,9 @@ void show_resource_mapper(char* buffer, int size, ResourceMapper resource_mapper
     memset(sub_buffer, 0, 200);
     
     for (int i = 0; i < resource_mapper.count; i++) {
-        strcat(sub_buffer, resource_mapper.names[i]);
+        char int_buffer[10];
+        sprintf(int_buffer, "%d", resource_mapper.names[i]);
+        strcat(sub_buffer, int_buffer);
     }
     
     sprintf(buffer, "count %d, names %s", resource_mapper.count, sub_buffer);
@@ -679,7 +681,7 @@ void show_resource_id_array(char* buffer, int size, ResourceId* resource_ids, in
 }
 
 void show_memory_location(char* buffer, MemoryLocation memory_location) {
-    sprintf(buffer, "id %s, offset %d", memory_location.id, memory_location.offset);
+    sprintf(buffer, "id %d, offset %d", memory_location.id, memory_location.offset);
 }
 
 const char* command_type_string(ECommandType type) {

@@ -345,7 +345,7 @@ void evaluate(Environment* environment, Command* command) {
     log_output(environment, command);
 }
 
-void   add_mapping(Environment* environment, const char* name, GLuint id) {
+void   add_mapping(Environment* environment, Id name, GLuint id) {
     ResourceMapping mapping;
     mapping.id = id;
     mapping.name = name;
@@ -353,7 +353,7 @@ void   add_mapping(Environment* environment, const char* name, GLuint id) {
     environment->resource_mapping_count++;
 }
 
-GLuint get_mapping(Environment* environment, const char* name) {
+GLuint get_mapping(Environment* environment, Id name) {
     for(int i = 0; i < environment->resource_mapping_count; i++) {
         ResourceMapping mapping = environment->resource_mappings[i];
         
@@ -388,7 +388,7 @@ GLuint from_resource_id(Environment* environment, ResourceId resource_id) {
 void map_result(Environment* environment, GLuint* resources, int count, ResourceMapper resource_mapper) {
     if (resource_mapper.map_resource) {
         for (int i = 0; i < count; i++) {
-            const char* resource_name = resource_mapper.names[i];
+            Id resource_name = resource_mapper.names[i];
             add_mapping(environment, resource_name, resources[i]);
         }
     }     
@@ -413,11 +413,11 @@ void add_resource(Environment* env, Resource resource) {
     env->resource_count++;
 }
 
-void delete_resource(Environment* env, const char* id) {
+void delete_resource(Environment* env, Id id) {
     assert(0);
 }
 
-void update_resource(Environment* env, const char* id, const char* data, 
+void update_resource(Environment* env, Id id, const char* data, 
                      int count) {
     assert(0);
 }
@@ -478,7 +478,7 @@ void show_resource_mapping(char* buffer, int size, ResourceMapping resource_mapp
     
 }
 
-Resource mk_resource(const char* id, char* buffer, int count)
+Resource mk_resource(Id id, char* buffer, int count)
 {
     Resource r = {id, buffer, count};
     return r;
