@@ -73,9 +73,9 @@ void* load_in_place(char* buffer) {
     char* start_position = buffer;
     
     assert(get_version(buffer) == 1);
-    buffer += sizeof(int);
+    buffer += sizeof(unsigned int);
 
-    int* buffer_as_int_p = (int*)buffer;
+    unsigned int* buffer_as_int_p = (unsigned int*)buffer;
     
     int fixup_count = *buffer_as_int_p;
     buffer_as_int_p++;
@@ -84,15 +84,15 @@ void* load_in_place(char* buffer) {
         int offset = *buffer_as_int_p;
         buffer_as_int_p++;
         
-        int fixup_offset = *(int*)(start_position + offset);
-        *(int*)(start_position + offset) = (int)(start_position + fixup_offset);
+        unsigned int fixup_offset = *(unsigned int*)(start_position + offset);
+        *(unsigned int*)(start_position + offset) = (unsigned int)(start_position + fixup_offset);
     }
     
     return buffer_as_int_p;
 }
 
 int get_version(const char* buffer) {
-    return *(int*)buffer;
+    return *(unsigned int*)buffer;
 }
 
 int get_output_byte_count(const char* buffer) {

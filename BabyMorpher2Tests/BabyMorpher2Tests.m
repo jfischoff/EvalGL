@@ -299,15 +299,15 @@ int array_test[3] = {0,1,3};
 }
 
 typedef struct TestObject_t {
-    int x;
-    char y;
-    float z;
+    GLint x;
+    GLchar y;
+    GLfloat z;
 } TestObject;
 
 typedef struct TestList_t {
     char x;
     TestObject* objects;
-    int count;
+    GLint count;
 } TestList;
 
 - (void)testLoadInPlace {
@@ -315,8 +315,8 @@ typedef struct TestList_t {
     
     const int size = (sizeof(TestObject) * 2) + 
         (sizeof(TestList) + header_size);
-    char buffer[size];
-    int* int_p = (int*)buffer;
+    unsigned char buffer[size];
+    unsigned int* int_p = (unsigned int*)buffer;
     
     *int_p = 1;
     int_p++;
@@ -334,8 +334,8 @@ typedef struct TestList_t {
     
     TestList test_list = {'t', list, 2};
     
-    int test_list_start = header_size + (sizeof(TestObject) * 2);
-    int test_list_list_start = test_list_start + (((char*)&test_list.objects) - ((char*)&test_list));
+    unsigned int test_list_start = header_size + (sizeof(TestObject) * 2);
+    unsigned int test_list_list_start = test_list_start + (((char*)&test_list.objects) - ((char*)&test_list));
     
     *int_p = test_list_list_start;
     int_p++;
@@ -343,13 +343,13 @@ typedef struct TestList_t {
     *int_p = test_list_list_start + 1;
     int_p++;
     
-    char* write_head = buffer + header_size;
+    char* write_head = (char*)buffer + header_size;
 
-    int offset_a = (write_head + sizeof(TestList)) - buffer;
-    int offset_b = (write_head + sizeof(TestList) + sizeof(TestObject)) - buffer;
+    unsigned int offset_a = (write_head + sizeof(TestList) + 4) - (char*)buffer;
+    unsigned int offset_b = (write_head + sizeof(TestList) + 4 + sizeof(TestObject)) - (char*)buffer;
     
-    ((int*)test_list.objects)[0] = offset_a;
-    ((int*)test_list.objects)[1] = offset_b;
+    ((unsigned int*)test_list.objects)[0] = offset_a;
+    ((unsigned int*)test_list.objects)[1] = offset_b;
     memcpy(write_head, &test_list, sizeof(TestList));
     write_head += sizeof(TestList);
     
@@ -360,7 +360,7 @@ typedef struct TestList_t {
     memcpy(write_head, &b, sizeof(TestObject));
     write_head += sizeof(TestObject);    
     
-    TestList* result = load_in_place(buffer);
+    TestList* result = load_in_place((char*)buffer);
     
     STAssertTrue(result->count == test_list.count, @"count not equal");
     
@@ -371,6 +371,28 @@ typedef struct TestList_t {
     STAssertTrue(result->objects[1].x == test_list.objects[1].x, @" second object not equal");
     STAssertTrue(result->objects[1].y == test_list.objects[1].y, @" second object not equal");
     STAssertTrue(result->objects[1].z == test_list.objects[1].z, @" second object not equal");
+    printf("\n\n");
+    for(int i = 0; i < size; i++) {
+        printf("%u", buffer[i]);
+        
+        if (i != size - 1) 
+            printf(", ");
+        
+    }
+    
+    unsigned char* test_object_p = (unsigned char*)&b;
+    
+    printf("\n\n");
+    const int test_object_size = sizeof(TestObject);
+    for(int i = 0; i < test_object_size; i++) {
+        printf("%u", test_object_p[i]);
+        
+        if (i != size - 1) 
+            printf(", ");
+        
+    }
+    fflush(stdout);
+    
     
 }
 
