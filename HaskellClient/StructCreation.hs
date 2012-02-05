@@ -14,11 +14,11 @@ import Control.Monad.State
 import qualified Data.Binary as DB
 import qualified Data.Binary.Put as DB
 import qualified Data.Binary.Get as DB
-import Data.Binary
 import Data.DeriveTH
 import GHC.Generics
 import Control.Applicative
 import Control.Monad.Identity
+import Data.Maybe
 --The test here is how to handle the creation of a struct 
 
 data GLPrimitive = PGLbitfield GLbitfield
@@ -60,12 +60,13 @@ instance DB.Binary GLPrimitive where
   get = undefined
                  
 data CValue = Struct [CValue]
-            | Union CValue Int
+            | Union CValue Word32
             | Primitive GLPrimitive
             | Array [CValue]
             | Pointer CValue
-            | Member CValue Int
-            | Id Int
+            | Member CValue Word32
+            | Id Word32
+            | EmptyValue
             deriving(Show)
             
 type CEnv = [(Int, CValue)]
@@ -75,7 +76,7 @@ type CState = State CEnv
 add_array value = do
     count <- gets length
     modify ((count, value):)
-    return count
+    return $ fromIntegral count
             
 class ToCValue a where
     to_c :: a -> CState CValue
@@ -130,7 +131,7 @@ align x = Member x $ pad_to 4 . size_of $ x
 size_of (Struct members) = sum . map size_of $ members
 size_of (Union x pad)    = (size_of x) + pad
 size_of (Primitive x)    = size_of_pgl x
-size_of (Array xs)       = length xs * size_of (head xs)
+size_of (Array xs)       = (fromIntegral . length $ xs) * size_of (head xs)
 size_of (Pointer x)      = 4
 size_of (Member x pad)   = size_of x + pad
 
@@ -206,11 +207,9 @@ mk_header fixups = DB.runPut $ do
 packWord32 = DB.runPut . DB.putWord32le
 unpackWord32 = DB.runGet DB.getWord32le
 
-type Objects = [(Int, Offset)]
+type Objects = [(Word32, Offset)]
 
 type PackState = StateT Objects (StateT [Fixup] (StateT BS.ByteString Identity))
-
-
 
 pack :: CEnv -> BS.ByteString
 pack env = result where
@@ -218,12 +217,14 @@ pack env = result where
     header = mk_header fixups
     new_fixups  = map ((fromIntegral $ BS.length header)+) fixups
     new_header  = mk_header $ traceIt new_fixups
-    new_objects = offset_objects (BS.length new_header) objects
+    new_objects = offset_objects (fromIntegral $ BS.length new_header) objects
     new_bytes  = replace_fixups bytes fixups $ new_objects
     result = BS.append new_header new_bytes
     
-replace_word32 :: BS.ByteString -> Word32 -> Word32 -> BS.ByteString
-replace_word32 bytes offset index = result where
+offset_objects offset objects = map (second (offset+)) objects
+    
+replace_word32 :: BS.ByteString -> Objects -> Word32 -> BS.ByteString
+replace_word32 bytes objects index = result where
     --split at the start
     (start, end) = BS.splitAt (fromIntegral index) bytes
     --split after
@@ -231,96 +232,77 @@ replace_word32 bytes offset index = result where
     --turn the 4 bytes into a word
     word = unpackWord32 word_bytes :: Word32
     --add the offset 
-    offset_word = word + offset
+    replacement_word = fromJust $ lookup word objects
     --convert back to bytes
-    new_word_bytes = packWord32 offset_word
+    new_word_bytes = packWord32 replacement_word
     --reconnect everything
     result = BS.concat [start, new_word_bytes, end']
 
-replace_fixups bytes fixups offset = foldl (\b f -> offset_word32 b offset f) bytes fixups
+replace_fixups bytes fixups objects = foldl (\b f -> replace_word32 b objects f) bytes fixups
 
 
-pack' :: CEnv -> PackState ()
-pack' = undefined    
-
-        
-{-
-instance ToCValue ResourceMapper where
-    to_c (ResourceMapper should_map ids) = return . Struct $ map align [to_c should_map, 
-                    Array $ map to_c ids]
-
-test = ResourceMapper (GLboolean True) [0,1,2]
-
-
-
-
-    
-add_pointer_array array = do
-    array_count <- lift $ gets length
-    lift $ modify ((array_count, array):) 
-    
-pack' :: CValue -> PackState () 
-pack' (Struct members) = mapM_ pack' members
-pack' (Union x count)  = pack_and_pad x count 
-pack' (Primitive x)    = append_bytestring $ encode x
-pack' (Array xs)       = mapM_ pack' xs
-pack' (PointerValue x)      = do 
-    index <- get_index
-    add_fixup $ fromIntegral index
-    append_bytestring $ encode $ index + 1
-    pack' x
-pack' (Pointer x)      = do 
-        index <- get_index
-        let pointer_count = length xs
-            object_size = size_of $ head xs
-            fixup_value fixup_index = fromIntegral $ (index+) $ fromIntegral $ (object_size * fixup_index) + 
-                                        ((pointer_count - fixup_index) * 4) 
-            fixup_location fixup_index =  (fixup_index * 4) + (traceIt index)
-            add_fixup' index = add_fixup $ fromIntegral $ fixup_location index
-            append_pointer index = append_bytestring $ packWord32 $ (fixup_value index :: Word32)
-            add_pointer index = do
-                                    add_fixup' index
-                                    append_pointer $ fromIntegral index
-        mapM_ add_pointer [0..fromIntegral pointer_count - 1]
-        mapM_ pack' xs
-pack' (Member x count) = pack_and_pad x count 
-
-pack_and_pad x count = do pack' x; pad count
 
 add_fixup :: Fixup -> PackState ()
-add_fixup x = modify (x:)
+add_fixup x = lift $ modify (x:)
 
 get_index :: PackState Int32
-get_index = lift $ gets $ fromIntegral . BS.length
+get_index = lift $ lift $ gets $ fromIntegral . BS.length
 
-append_bytestring x = lift $ modify $ (flip BS.append) x
+append_bytestring :: BS.ByteString -> PackState ()
+append_bytestring x = lift $ lift $ modify $ (flip BS.append) x
 
+pad :: Word32 -> PackState ()
+pad count = append_bytestring $ BS.pack $ take (fromIntegral count) (cycle [0])
 
-pad count = append_bytestring $ BS.pack $ take count (cycle [0])
+pack' :: CEnv -> PackState ()
+pack' env = mapM_ (\(i, v) -> pack_value i v) env
 
-        
+add_id i = do 
+    index <- get_index
+    modify ((fromIntegral i, fromIntegral index):)
+
+pack_value :: Int -> CValue -> PackState () 
+pack_value i v = do add_id i; pack_value' v
+
+pack_value' (Struct members) = mapM_ pack_value' members
+pack_value' (Union x count)  = pack_and_pad x count 
+pack_value' (Primitive x)    = append_bytestring $ DB.encode x
+pack_value' (Array xs)       = mapM_ pack_value' xs
+pack_value' (Pointer (Id i))      = do 
+        index <- fromIntegral <$> get_index
+        add_fixup index
+        append_bytestring $ packWord32 $ i
+pack_value' (Member x count) = pack_and_pad x count 
+ 
+pack_and_pad x count = do pack_value' x; pad count
+
 test_a = TestObject 438129054 (GLchar 'a') 1.5
 test_b = TestObject 102 (GLchar 'b') 5.5
 
 test_list = TestList (GLchar 't') [test_a, test_b]
 
-test_list_g = to_c test_list
+encode :: ToCValue a => a -> CEnv
+encode x = result where 
+    (value, state) = runState (to_c x) []
+    result = (fromIntegral $ length state, value):state 
+
+test_list_g = encode test_list
 packed = pack test_list_g 
 
 as_bytes = BS.unpack packed
 
-as_bytes_a = BS.unpack $ pack $ to_c $ test_a
-as_bytes_b = BS.unpack $ pack $ to_c $ test_b
+as_bytes_a = BS.unpack $ pack $ encode $ test_a
+as_bytes_b = BS.unpack $ pack $ encode $ test_b
 
---the test
---make a command list
---with two commands
---err
--- do the same test that I currently have
--- make the same structs
+write_file = BS.writeFile "test_objects.bin" (BS.append (packWord32 $ fromIntegral $ BS.length packed) packed)
+        
 
--}
-
+--instance ToCValue ResourceMapper where
+--    to_c (ResourceMapper should_map ids) = return . Struct $ map align [to_c should_map, 
+--                    Array $ map to_c ids] -- to do I need a function that fills in the array with empty
+                                          -- data upto the maximum
+                                          
+                                          
 
 
 

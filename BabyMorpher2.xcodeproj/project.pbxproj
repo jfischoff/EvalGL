@@ -30,6 +30,7 @@
 		63C668C114D4EE3800E24065 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63C668BF14D4EE3800E24065 /* InfoPlist.strings */; };
 		63C668C414D4EE3800E24065 /* BabyMorpher2Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C668C314D4EE3800E24065 /* BabyMorpher2Tests.m */; };
 		63C668D314D5EAF400E24065 /* CommandMakers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63C668D214D5EAF300E24065 /* CommandMakers.cpp */; };
+		63EE4D3214DCBF9300FD6D94 /* test_objects.bin in Resources */ = {isa = PBXBuildFile; fileRef = 63EE4D3114DCBF9300FD6D94 /* test_objects.bin */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +76,7 @@
 		63C668CD14D4EE8D00E24065 /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Commands.h; sourceTree = "<group>"; };
 		63C668D114D5E5BC00E24065 /* CommandMakers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommandMakers.h; sourceTree = "<group>"; };
 		63C668D214D5EAF300E24065 /* CommandMakers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandMakers.cpp; path = ../CommandMakers.cpp; sourceTree = "<group>"; };
+		63EE4D3114DCBF9300FD6D94 /* test_objects.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = test_objects.bin; path = HaskellClient/test_objects.bin; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +108,7 @@
 		63C6688114D4EE3800E24065 = {
 			isa = PBXGroup;
 			children = (
+				63EE4D3114DCBF9300FD6D94 /* test_objects.bin */,
 				63C6689A14D4EE3800E24065 /* BabyMorpher2 */,
 				63C668BC14D4EE3800E24065 /* BabyMorpher2Tests */,
 				63C6688F14D4EE3800E24065 /* Frameworks */,
@@ -264,6 +267,7 @@
 				63C668A914D4EE3800E24065 /* Shader.vsh in Resources */,
 				63C668AF14D4EE3800E24065 /* ViewController.xib in Resources */,
 				63A21CFB14D5EC93007FF709 /* PasteBin in Resources */,
+				63EE4D3214DCBF9300FD6D94 /* test_objects.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

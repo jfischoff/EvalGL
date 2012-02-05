@@ -8,6 +8,8 @@ import Data.Generics.Uniplate.Data
 import Data.Data
 import Data.Typeable
 import Data.List
+import qualified StructCreation as S
+import Data.Word
 
 --each command has a id associated with it
 --
@@ -27,108 +29,89 @@ import Data.List
 --I need to think about this more
 
 
-data GLPrimitive = PGLbitfield GLbitfield
-                 | PGLboolean GLboolean
-                 | PGLbyte GLbyte
-                 | PGLchar GLchar
-                 | PGLclampf GLclampf
-                 | PGLenum GLenum
-                 | PGLfloat GLfloat
-                 | PGLint GLint
-                 | PGLshort GLshort
-                 | PGLsizei GLsizei
-                 | PGLubyte GLubyte
-                 | PGLuint GLuint
-                 | PGLushort GLushort
-                 deriving(Show, Eq, Data, Typeable)
-
-data Description = StructDescription String Description
-                 | UnionDescription  String Description
-                 | Primitive GLPrimitive
-                 | ArrayDescription Int Description
-                 | EmptyDescription
-                 | Pair Description Description
-                 | Member String Description
-                 deriving(Show, Eq, Data, Typeable)
+data GValue = GStruct String GValue
+            | GUnion GValue
+            | GPrimitive S.GLPrimitive
+            | GArray GValue
+            | GEmpty
+            | GPair GValue GValue
+            | GMember String GValue
+             deriving(Show, Eq)
                  
-get_struct_members (StructDescription x (UnionDescription _ y)) = y
+get_struct_members (GStruct _ (GUnion y)) = y
                  
-data PaddedDescription = PaddedStructDescription [(String, PaddedDescription, Int)]
-                       | PaddedUnionDescription  [(String, PaddedDescription)] Int
-                       | PaddedPrimitive GLPrimitive
-                       | PaddedArrayDescription PaddedDescription Int Int
                       
 type Offset = Int
 type Fixup = Offset
 
 class GAsC f where
-  g_to_c :: f a -> Description
+  g_to_g :: f a -> GValue
 
 class AsC a where
-    to_c :: a -> Description
-    default to_c :: (Generic a, GAsC (Rep a)) => a -> Description
-    to_c a = g_to_c (from a)
+    to_g :: a -> GValue
+    default to_g :: (Generic a, GAsC (Rep a)) => a -> GValue
+    to_g a = g_to_g (from a)
     
 instance AsC GLbitfield where
-    to_c = Primitive . PGLbitfield
+    to_g = GPrimitive . S.PGLbitfield
     
 instance AsC GLboolean where
-    to_c = Primitive . PGLboolean
+    to_g = GPrimitive . S.PGLboolean
     
 instance AsC GLbyte where
-    to_c = Primitive . PGLbyte
+    to_g = GPrimitive . S.PGLbyte
     
 instance AsC GLchar where
-    to_c = Primitive . PGLchar
+    to_g = GPrimitive . S.PGLchar
                      
 instance AsC GLclampf where
-    to_c = Primitive . PGLclampf
+    to_g = GPrimitive . S.PGLclampf
     
 instance AsC GLenum where
-    to_c = Primitive . PGLenum
+    to_g = GPrimitive . S.PGLenum
              
 instance AsC GLfloat where
-    to_c = Primitive . PGLfloat
+    to_g = GPrimitive . S.PGLfloat
     
 instance AsC GLint where
-    to_c = Primitive . PGLint
+    to_g = GPrimitive . S.PGLint
     
 instance AsC GLshort where
-    to_c = Primitive . PGLshort
+    to_g = GPrimitive . S.PGLshort
     
 instance AsC GLsizei where
-    to_c = Primitive . PGLsizei
+    to_g = GPrimitive . S.PGLsizei
     
 instance AsC GLubyte where
-    to_c = Primitive . PGLubyte
+    to_g = GPrimitive . S.PGLubyte
 
 instance AsC GLuint where
-    to_c = Primitive . PGLuint
+    to_g = GPrimitive . S.PGLuint
 
 instance AsC GLushort where
-    to_c = Primitive . PGLushort
+    to_g = GPrimitive . S.PGLushort
 
 instance GAsC U1 where
-    g_to_c U1 = EmptyDescription
+    g_to_g U1 = GEmpty
     
 instance (GAsC a, GAsC b) => GAsC (a :+: b) where
-  g_to_c (L1 x) = g_to_c x
-  g_to_c (R1 x) = g_to_c x
+  g_to_g (L1 x) = g_to_g x
+  g_to_g (R1 x) = g_to_g x
   
 instance (GAsC a, GAsC b) => GAsC (a :*: b) where
-    g_to_c (a :*: b) = Pair (g_to_c a) (g_to_c b)
+    g_to_g (a :*: b) = GPair (g_to_g a) (g_to_g b)
   
 instance (GAsC a, Datatype c) => GAsC (D1 c a) where
-    g_to_c x = StructDescription (datatypeName x) $ UnionDescription "" $ g_to_c $ unM1 x 
+    g_to_g x = GStruct (datatypeName x) $ GUnion $ g_to_g $ unM1 x 
   
 instance (GAsC a, Constructor c) => GAsC (C1 c a) where
-    g_to_c x = Member (conName x) $ g_to_c $ unM1 x
+    g_to_g x = GMember (conName x) $ g_to_g $ unM1 x
     
 instance (GAsC a) => GAsC (S1 c a) where
-    g_to_c = g_to_c . unM1
+    g_to_g = g_to_g . unM1
 
 instance (AsC a) => GAsC (K1 i a) where
-    g_to_c = to_c . unK1
+    g_to_g = to_g . unK1
 
 data TestData = Constructor1 GLuint GLboolean GLchar
               | Constructor2 GLint
@@ -136,33 +119,74 @@ data TestData = Constructor1 GLuint GLboolean GLchar
 
 instance AsC TestData where
 
-test = Constructor1 1 1 (GLchar 'd')
+test = Constructor1 1 (GLboolean True) (GLchar 'd')
 
-test_desc = to_c test
+test_desc = to_g test
 
 members = get_struct_members test_desc
 
-unfold_pairs (Pair x y) = x:(unfold_pairs y)
+unfold_pairs (GPair x y) = x:(unfold_pairs y)
 unfold_pairs x          = x:[]
 
-just_params = unfold_pairs $ (\(Member _ x) -> x) members
+just_params = unfold_pairs $ (\(GMember _ x) -> x) members
+                    
 
+{-
 
-                      
-pack :: Command -> BS.ByteString
-pack = undefined --must be a CommandList and the last command must be a loop command
---roll through and concat the fixups
---calculate the space of the head
---update the fixups
---write out the header and the body
+I need a generic way to create the ToCValue instances
+I should start with the th descriptions of a type
+From there I go to the c description of a type
+Based on the c description of a type I can build the to CValue
 
+-}
 
-pack' :: Command -> (BS.ByteString, [Fixup])
-pack' = undefined --this for the sub commands
+--write out what the c code should look like
+--make the CDescription from that and the instance of ToCDescription
+--
 
+{-
+    
 
-pad :: Description -> PaddedDescription
-pad = undefined
+    typedef struct TestExpression_t {
+        
+    } TestExpression;
+
+-}
+
+data TestExpression = Add Expression Expression
+                    | Multiply Expression Expression
+                    | Lit GLint
+
+instance ToCDescription TestExpression where
+    to_c_description x = [  PrimitiveD $ Enum [
+                                ("TEST_EXPRESSION_ADD", 0),
+                                ("TEST_EXPRESSION_MULTIPLY", 1),
+                                ("TEST_EXPRESSION_LIT", 2)
+                                ],
+                            StructD "TestExpression" [
+                            ,
+                            Union "" 
+                    
+                        ]]
+
+data PrimitiveType = Enum [(String, Word32)]
+
+data CDescription = StructD String [CDescription]
+                  | UnionD  String [CDescription]
+                  | PrimitiveD PrimitiveType 
+                  | VariableArray CDescription
+                  | FixedArray Word32 CDescription
+                  | MemberD String CDescription
+
+class ToCDescription a where
+    to_c_description :: a -> [CDescription]
+
+encode :: (ToCDescription a, AsC a) => a -> S.CValue
+encode x = to_c_value (to_c_description x) (to_g x)
+
+--I need the description so I can properly create unions
+to_c_value :: CDescription -> GValue -> S.CValue
+to_c_value = undefined
 
 
 

@@ -310,6 +310,27 @@ typedef struct TestList_t {
     GLint count;
 } TestList;
 
+- (void)testLoadInPlaceFromHaskellOutput {
+    NSString* test_file_path = [[NSBundle mainBundle] pathForResource:@"test_objects" ofType:@"bin"];
+    const char* c_test_file_path = [test_file_path UTF8String];
+    
+    FILE* file_handle = fopen(c_test_file_path, "rb");
+    
+    //this means that I need to add a size for the header
+    
+    //first read a word32
+    unsigned int size; 
+    fread(&size, 1, 4, file_handle);
+    //allocate a buffer that is the size
+    char* buffer = malloc(size);
+    
+    fread(buffer, 1, size, file_handle);
+    
+    TestList* result = load_in_place((char*)buffer);
+    
+    int a = 0;
+}
+
 - (void)testLoadInPlace {
     const int header_size = 4 + 4 + (2 * 4);
     
