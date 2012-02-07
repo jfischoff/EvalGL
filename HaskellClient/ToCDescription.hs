@@ -5,8 +5,6 @@ import Language.C
 
 type Decl = CDeclaration ()
 
-
-
 class ToCDescription a where
     to_c_desc :: a -> [Decl]
     

@@ -11,22 +11,6 @@ import Data.List
 import qualified StructCreation as S
 import Data.Word
 
---each command has a id associated with it
---
---There is a general way that this serialization uses
---the members of a type have an amount of padding associated with them
-
---There is a general method for going from a haskell type to c type
-
---Every type is a struct
---if there are more then one constructors
---then the struct has a union
---and a enum for the type
-
---Haskell Type -> Description -> CType -> String
---Haskell Type -> Description -> PaddedDescription
-
---I need to think about this more
 
 
 data GValue = GStruct String GValue
@@ -126,7 +110,7 @@ test_desc = to_g test
 members = get_struct_members test_desc
 
 unfold_pairs (GPair x y) = x:(unfold_pairs y)
-unfold_pairs x          = x:[]
+unfold_pairs x           = x:[]
 
 just_params = unfold_pairs $ (\(GMember _ x) -> x) members
                     
@@ -153,40 +137,34 @@ Based on the c description of a type I can build the to CValue
 
 -}
 
-data TestExpression = Add Expression Expression
-                    | Multiply Expression Expression
-                    | Lit GLint
+--data TestExpression = Add Expression Expression
+--                    | Multiply Expression Expression
+--                    | Lit GLint
 
-instance ToCDescription TestExpression where
-    to_c_description x = [  PrimitiveD $ Enum [
-                                ("TEST_EXPRESSION_ADD", 0),
-                                ("TEST_EXPRESSION_MULTIPLY", 1),
-                                ("TEST_EXPRESSION_LIT", 2)
-                                ],
-                            StructD "TestExpression" [
-                            ,
-                            Union "" 
-                    
-                        ]]
+--instance ToCDescription TestExpression where
+--    to_c_description x = [  PrimitiveD $ Enum [
+--                                ("TEST_EXPRESSION_ADD", 0),
+--                                ("TEST_EXPRESSION_MULTIPLY", 1),
+--                                ("TEST_EXPRESSION_LIT", 2)
+--                                ],
+--                            StructD "TestExpression" [
+--                            ,
+--                            Union "" 
+--                    
+--                        ]]
 
-data PrimitiveType = Enum [(String, Word32)]
+--data PrimitiveType = Enum [(String, Word32)]
+--data CDescription = StructD String [CDescription]
+--                  | UnionD  String [CDescription]
+--                  | PrimitiveD PrimitiveType 
+--                  | VariableArray CDescription
+--                  | FixedArray Word32 CDescription
+--                  | MemberD String CDescription
 
-data CDescription = StructD String [CDescription]
-                  | UnionD  String [CDescription]
-                  | PrimitiveD PrimitiveType 
-                  | VariableArray CDescription
-                  | FixedArray Word32 CDescription
-                  | MemberD String CDescription
+--class ToCDescription a where
+--    to_c_description :: a -> [CDescription]
 
-class ToCDescription a where
-    to_c_description :: a -> [CDescription]
 
-encode :: (ToCDescription a, AsC a) => a -> S.CValue
-encode x = to_c_value (to_c_description x) (to_g x)
-
---I need the description so I can properly create unions
-to_c_value :: CDescription -> GValue -> S.CValue
-to_c_value = undefined
 
 
 
