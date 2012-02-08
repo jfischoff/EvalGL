@@ -1,9 +1,12 @@
-{-# LANGUAGE DeriveGeneric, TypeOperators, FlexibleInstances, TypeSynonymInstances,
-    DefaultSignatures, FlexibleContexts, DeriveDataTypeable, ForeignFunctionInterface,
-    OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric, KindSignatures, TemplateHaskell, 
+    QuasiQuotes, FlexibleInstances, TypeOperators, TypeSynonymInstances,
+    MultiParamTypeClasses, FunctionalDependencies, OverlappingInstances,
+    ScopedTypeVariables, EmptyDataDecls, DefaultSignatures, ViewPatterns,
+    UndecidableInstances, FlexibleContexts, StandaloneDeriving, IncoherentInstances,
+    DeriveDataTypeable #-}
 module StructCreation where
 import Data.Word
-import Types
+import GLPrimitives
 import Data.Data
 import Control.Arrow
 import Foreign
@@ -15,11 +18,13 @@ import qualified Data.Binary as DB
 import qualified Data.Binary.Put as DB
 import qualified Data.Binary.Get as DB
 import Data.DeriveTH
-import GHC.Generics
-import Control.Applicative
 import Control.Monad.Identity
 import Data.Maybe
 import GenericBinary
+import GHC.Generics
+import Data.DList (DList, toList)
+import Data.Monoid (mappend)
+import Control.Applicative
 --The test here is how to handle the creation of a struct
 
 instance DB.Binary GLPrimitive where
@@ -39,15 +44,16 @@ data TGLPrimitive = TGLbitfield
                   | TGLubyte
                   | TGLuint
                   | TGLushort
-                 deriving(Show, Eq)
+                 deriving(Show, Eq, Data, Typeable)
 
 data CType = TStruct String [CType]
            | TUnion  String [CType]
            | TPrimitive TGLPrimitive
            | TArray Int CType
            | TPointer CType
+           | TVariable CType
            | TMember String CType
-           deriving(Show, Eq)
+           deriving(Show, Eq, Data, Typeable)
 
 data GLPrimitive = PGLbitfield GLbitfield
                  | PGLboolean GLboolean
@@ -62,25 +68,26 @@ data GLPrimitive = PGLbitfield GLbitfield
                  | PGLubyte GLubyte
                  | PGLuint GLuint
                  | PGLushort GLushort
-                 deriving(Show, Eq, Generic)
+                 deriving(Show, Eq, Generic, Data, Typeable)
                  
 data Value = VStruct [Value]
            | VUnion String Value
            | VPrimitive GLPrimitive
            | VArray [Value]
-           | VPointer [Value]
            | VMember Value
-           
+           | Void
+           deriving(Show, Eq, Data, Typeable)
                  
 data CValue = Struct [CValue]
-             | Union CValue CType
+             | Union CValue Word32 CType
              | Primitive GLPrimitive
              | Array [CValue]
              | Pointer CValue
              | Member CValue Word32
              | Id Word32
+             | Enum [(String, Word32)]
              | EmptyValue
-             deriving(Show)
+             deriving(Show, Data, Typeable)
                        
             
 type CEnv = [(Int, CValue)]
@@ -100,7 +107,8 @@ class ToCValue a where
     
 class ToValue a where
     to_v :: a -> Value
-    
+    default to_v :: (Generic a, GToValue (Rep a)) => a -> Value
+    to_v a = g_to_value (from a)
     
   
 instance ToCValue GLPrimitive where
@@ -170,7 +178,7 @@ size_of_tgl TGLuint     = 4
 size_of_tgl TGLushort   = 2
 
 size_of (Struct members) = sum . map size_of $ members
-size_of (Union x typ)    = size_of_t typ
+size_of (Union x i typ)    = size_of_t typ
 size_of (Primitive x)    = size_of_pgl x
 size_of (Array xs)       = (fromIntegral . length $ xs) * size_of (head xs)
 size_of (Pointer x)      = 4
@@ -190,15 +198,7 @@ size_of_pgl (PGLubyte x)    = 1
 size_of_pgl (PGLuint x)     = 4
 size_of_pgl (PGLushort x)   = 2
 
---write the function that combines a type with a value
---by recursing through and added the union types
-add_type_info :: CType -> CValue -> CValue
-add_type_info (TStruct _ members) (Struct s_members) = Struct $ zipWith add_type_info members s_members
-add_type_info u@(TUnion _ members) (Union x _)       = Union x u
-add_type_info (TArray _ typ) (Array xs)              = Array $ zipWith add_type_info (cycle [typ]) xs
-add_type_info (TMember _ typ) (Member v _)           = Member (add_type_info typ v) 0
-add_type_info _ x                                    = x
-  
+
 
 
 traceIt x = trace (show x) x
@@ -213,7 +213,7 @@ data TestObject = TestObject
         y :: GLchar,
         z :: GLfloat
     }
-    deriving(Show, Eq, Generic)
+    deriving(Show, Eq, Generic, Data, Typeable)
     
 
     
@@ -229,7 +229,7 @@ data TestList = TestList
         test_list_x :: GLchar,
         list :: [TestObject]
     }
-    deriving(Show, Eq, Generic)
+    deriving(Show, Eq, Generic, Data, Typeable)
     
 instance ToCValue TestList where
     to_c (TestList x y) = do
@@ -324,7 +324,7 @@ pack_value i v = do add_id i; pack_value' v
 
 pack_value' :: CValue -> PackState ()
 pack_value' (Struct members) = mapM_ pack_value' members
-pack_value' (Union x typ)  = pack_and_pad x $ fromIntegral $ size_of_t typ 
+pack_value' (Union x i typ)  = pack_and_pad x $ fromIntegral $ size_of_t typ 
 pack_value' (Primitive x)    = append_bytestring $ DB.encode x
 pack_value' (Array xs)       = mapM_ pack_value' xs
 pack_value' (Pointer (Id i)) = do 
@@ -359,11 +359,135 @@ as_bytes_b = BS.unpack $ pack $ encode $ test_b
 write_file = BS.writeFile "test_objects.bin" (BS.append (packWord32 $ fromIntegral $ BS.length packed) packed)
         
 
---instance ToCValue ResourceMapper where
---    to_c (ResourceMapper should_map ids) = return . Struct $ map align [to_c should_map, 
---                    Array $ map to_c ids] -- to do I need a function that fills in the array with empty
-                                          -- data upto the maximum
+--Primitives
+
+instance ToValue GLbitfield where
+    to_v = VPrimitive . PGLbitfield
+    
+instance ToValue GLboolean where
+    to_v = VPrimitive . PGLboolean
+    
+instance ToValue GLbyte where
+    to_v = VPrimitive . PGLbyte
+    
+instance ToValue GLchar where
+    to_v = VPrimitive . PGLchar
+                    
+instance ToValue GLclampf where
+    to_v = VPrimitive . PGLclampf
+    
+instance ToValue GLenum where
+    to_v = VPrimitive . PGLenum
+             
+instance ToValue GLfloat where
+    to_v = VPrimitive . PGLfloat
+    
+instance ToValue GLint where
+    to_v = VPrimitive . PGLint
+    
+instance ToValue GLshort where
+    to_v = VPrimitive . PGLshort
+    
+instance ToValue GLsizei where
+    to_v = VPrimitive . PGLsizei
+    
+instance ToValue GLubyte where
+    to_v = VPrimitive . PGLubyte
+
+instance ToValue GLuint where
+    to_v = VPrimitive . PGLuint
+
+instance ToValue GLushort where
+    to_v = VPrimitive . PGLushort
                                           
+                                          
+                                                                          
+class GToValue f where
+  g_to_value :: f a -> Value
+
+instance GToValue U1 where
+  g_to_value U1 = Void
+
+instance (Constructor c, ConsToExp a) => GToValue (C1 c a) where
+  g_to_value p = consToExp (conName $ (undefined :: t c a p)) $ unM1 p
+
+instance (GToValue a) => GToValue (M1 i c a) where
+  g_to_value = g_to_value . unM1
+
+instance (ToValue a) => GToValue (K1 i a) where
+  g_to_value = to_v . unK1
+
+instance (GToValue a, GToValue b) => GToValue (a :+: b) where
+  g_to_value (L1 x) = g_to_value x
+  g_to_value (R1 x) = g_to_value x
+
+instance (GToValue a, GToValue b) => GToValue (a :*: b) where
+    g_to_value =  VStruct . toList . gConArgToLit 
+
+class GConArgToLit f where
+  gConArgToLit :: f a -> DList Value 
+
+instance (GConArgToLit a, GConArgToLit b) => GConArgToLit (a :*: b) where
+  gConArgToLit (a :*: b) = gConArgToLit a `mappend` gConArgToLit b
+
+instance (GToValue a) => GConArgToLit a where
+  gConArgToLit a = pure (VMember $ g_to_value a)
+
+--------------------------------------------------------------------------------
+
+class ConsToExp    f where consToExp  ::           String -> f a -> Value
+
+instance GToValue f => ConsToExp f where
+  consToExp name p = VUnion name $ g_to_value p
+
+---------------------------------------------------------------------------------
+
+instance ToValue a => ToValue [a] where
+    to_v = VArray . map to_v
+
+
+
+--Primitives
+
+instance ToCType GLbitfield where
+    to_c_type x = TPrimitive TGLbitfield
+    
+instance ToCType GLboolean where
+    to_c_type x = TPrimitive TGLboolean
+    
+instance ToCType GLbyte where
+    to_c_type x = TPrimitive TGLbyte
+    
+instance ToCType GLchar where
+    to_c_type x = TPrimitive TGLchar
+                     
+instance ToCType GLclampf where
+    to_c_type x = TPrimitive TGLclampf
+    
+instance ToCType GLenum where
+    to_c_type x = TPrimitive TGLenum
+             
+instance ToCType GLfloat where
+    to_c_type x = TPrimitive TGLfloat
+    
+instance ToCType GLint where
+    to_c_type x = TPrimitive TGLint
+    
+instance ToCType GLshort where
+    to_c_type x = TPrimitive TGLshort
+    
+instance ToCType GLsizei where
+    to_c_type x = TPrimitive TGLsizei
+    
+instance ToCType GLubyte where
+    to_c_type x = TPrimitive TGLubyte
+
+instance ToCType GLuint where
+    to_c_type x = TPrimitive TGLuint
+
+instance ToCType GLushort where
+    to_c_type x = TPrimitive TGLushort
+    
 
                                           
                                           
