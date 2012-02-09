@@ -38,7 +38,7 @@ mk_primitive_member name primitive = TMember name $ TPrimitive primitive
 
 mk_record_ctype name members = TUnion name [TMember name $ TStruct "" members]
 
---(<::>)   = mk_primitive_member
+
 
 mk_array count typ = TArray count (to_c_type typ)
 
