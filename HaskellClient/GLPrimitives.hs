@@ -59,6 +59,8 @@ newtype GLshort    = GLshort Int16
 instance Binary GLshort where
     put (GLshort x) = putWord16le $ fromIntegral x
     get = undefined 
+    
+
 
 newtype GLsizei    = GLsizei Word32
     deriving(Show, Eq, Num, Storable, Binary, Data, Typeable, Arbitrary, Generic)
@@ -73,6 +75,9 @@ newtype GLfixed    = GLfixed Word32
 newtype GLclampx    = GLclampx Word32
         deriving(Show, Eq, Num, Storable, Binary, Data, Typeable, Arbitrary, Generic)
 
+type GLIntPtr = GLuint
+type GLsizeiptr = GLuint
+
 data MatrixUniformType = MATRIX_UNIFORM_2X2
                        | MATRIX_UNIFORM_3X3
                        | MATRIX_UNIFORM_4X4
@@ -82,6 +87,8 @@ $(derive makeBinary ''MatrixUniformType)
 $(derive makeArbitrary ''MatrixUniformType)
 
 type GLError = GLenum
+
+type GLPointer = GLuint
 
 type Id  = GLuint
 type GLId = GLuint

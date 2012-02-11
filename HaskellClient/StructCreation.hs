@@ -44,6 +44,7 @@ data TGLPrimitive = TGLbitfield
                   | TGLubyte
                   | TGLuint
                   | TGLushort
+                  | TVoid
                  deriving(Show, Eq, Data, Typeable)
 
 data CType = TStruct String [CType]

@@ -1,0 +1,96 @@
+I think the idea is here is to create pieces that I can combine better.
+
+first I need to adjust my struct creation to take into account that * is a return parameter if it is not const
+I should pass in sizes for the output buffers
+
+So the concept is that to use the gl eval I need a way to create buffers and return them
+
+I have a machine that has the commands
+
+There are the commands
+This has nothing to do with opengl
+
+Create
+Delete
+Put id size data
+Get 
+Run 
+
+List 
+Loop
+
+The run command has a 
+
+Run [ResourceMaps] Command
+
+Every Command has set/get 
+
+the resource map is
+
+ResourceMap (id, (Command, void*) -> Command)
+
+I think that the ResourceMapping is what is happen for both the memory and the GLuint ids
+
+ResourceMap a = (id, (Command, a) -> Command)
+
+What this seems to suggest is that if I can make 
+
+Basically I have 
+
+CommandList = List ResourceCommand 
+            | Loop ResourceCommand
+            
+
+
+For resource map to work I need to know the offsets off all of the data
+
+So there is a list of these things up to some max
+and the outputs are read in order
+
+Run PCmd blah blah Id Id -> Run [(Id, (offset, size))] Cmd blah blah -1 -1
+
+I need to generate a the PCmds and the functions that them to regular commands with 
+
+
+find the data
+copy cmd at the offset with the size
+pass to the evaluator
+
+
+So Now I need to generate the haskell versions of My Commands
+
+Basically I go through the functions and where ever there is a const void*  I replace it with a Id
+
+Then I need to make a to_run that makes the Run [(Id, offset, size)] Command
+
+This means two things 
+One I need serialize out the Commands
+So I need to make them
+In Haskell with ToCTypes
+This will be easy because I will directly map the types
+Actually I don't even know if I need to generate them
+I don't I do
+
+I Just need to generate the haskell types
+I can use generics for the ctype because I am not sending anything but primitives for the opengl commands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        
