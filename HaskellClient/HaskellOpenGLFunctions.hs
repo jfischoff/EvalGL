@@ -9,16 +9,8 @@ import Language.Haskell.TH
 import Control.Monad
 import GLPrimitives
 import GHC.Generics
+import Command
 
-
-
-data Command a b c = Command
-    {
-        input  :: a,
-        output :: b,
-        error  :: c
-    }
-    deriving(Show, Eq, Generic)
 
 $(do
     (Right fs) <- runIO $ load_and_parse_header_file "OpenGLFunctions.h" 

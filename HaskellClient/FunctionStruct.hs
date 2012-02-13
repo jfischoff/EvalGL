@@ -119,9 +119,8 @@ evaluator command_type_name functions = result where
     typ_id = mk_named' command_type_name
     case_statements = concatMap (dispatch_function_case command_type_name) functions
     switch_block = Block case_statements noSrcLoc
-    
 
---TODO add the ability to capture the result    
+
 dispatch_function_case command_name function = result where
     result           = [BlockStm cas, BlockStm $ Break noSrcLoc]
     cas              = Case (Var enum_name noSrcLoc) (Exp (Just $ case_exp) noSrcLoc) noSrcLoc
@@ -132,17 +131,16 @@ dispatch_function_case command_name function = result where
     case_exp         = if (typ $ gl_function_return_value function) == TVoid || (typ $ gl_function_return_value function) == TGLvoid
                             then func_call 
                             else Assign (Member (PtrMember (Var (mk_id "command") noSrcLoc) (mk_id "result") noSrcLoc) (mk_id "return") noSrcLoc) JustAssign func_call noSrcLoc
-    
+
 function_name_to_enum_name cmd_name fn_name = result where
     enum_name = enum_name_from_name cmd_name
     result    = mk_id $ name_to_enum_option enum_name fn_name
-    
+
 mk_func_arg (param, ty) = result where
     result   = if is_output ty
                     then Member (PtrMember (Var (mk_id "command") noSrcLoc) (mk_id "result") noSrcLoc) param_id noSrcLoc
                     else Member (PtrMember (Var (mk_id "command") noSrcLoc) (mk_id "cmd") noSrcLoc) param_id noSrcLoc 
-    param_id = mk_id param 
-    
+    param_id = mk_id param
 
 
 -----------------------------------------------------------------------------------------------------------------------

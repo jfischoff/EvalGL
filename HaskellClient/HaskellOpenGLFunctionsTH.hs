@@ -79,9 +79,11 @@ make_r_command = make_g_command "R"
 --basically I am going to add offsets that need to get fixed up
 
 -- TODO get the template haskell stuff written working
+--  assume it is working
 -- Get the generic CType stuff working
 -- Get the List and Loop working
--- 
+-- Generate the Evaluator for ResourceManager
+-- Generate the Evaluator for List and Loop
 
 make_gl_parent_command :: [GLFunction] -> Dec
 make_gl_parent_command fs = result where

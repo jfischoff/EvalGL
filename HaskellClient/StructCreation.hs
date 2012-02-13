@@ -25,36 +25,14 @@ import GHC.Generics
 import Data.DList (DList, toList)
 import Data.Monoid (mappend)
 import Control.Applicative
+import CType
 --The test here is how to handle the creation of a struct
 
 instance DB.Binary GLPrimitive where
   put x = gput $ from x
   get = undefined 
 
-data TGLPrimitive = TGLbitfield
-                  | TGLboolean
-                  | TGLbyte
-                  | TGLchar
-                  | TGLclampf
-                  | TGLenum
-                  | TGLfloat
-                  | TGLint
-                  | TGLshort
-                  | TGLsizei
-                  | TGLubyte
-                  | TGLuint
-                  | TGLushort
-                  | TVoid
-                 deriving(Show, Eq, Data, Typeable)
 
-data CType = TStruct String [CType]
-           | TUnion  String [CType]
-           | TPrimitive TGLPrimitive
-           | TArray Int CType
-           | TPointer CType
-           | TVariable CType
-           | TMember String CType
-           deriving(Show, Eq, Data, Typeable)
 
 data GLPrimitive = PGLbitfield GLbitfield
                  | PGLboolean GLboolean
@@ -89,7 +67,7 @@ data CValue = Struct [CValue]
              | Enum [(String, Word32)]
              | EmptyValue
              deriving(Show, Data, Typeable)
-                       
+                        
             
 type CEnv = [(Int, CValue)]
         
@@ -100,8 +78,7 @@ add_array value = do
     modify ((count, value):)
     return $ fromIntegral count
     
-class ToCType a where
-    to_c_type :: a -> CType
+
             
 class ToCValue a where
     to_c :: a -> CState CValue
