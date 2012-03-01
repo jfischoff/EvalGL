@@ -97,6 +97,9 @@ convert_type typs (AppT x y) = AppT (convert_type typs x) (convert_type typs y)
 
 --------------------------------------------------------------------------------------------------------------
 
+--I need to make the definitions from the functions
+--I need to also make the evalutator
+
 type CommandHandler = (String, Func)
                 
 make_command_code :: Name -> [CommandHandler] -> Q ((String, [Definition]), (String, [Func]))
@@ -105,7 +108,7 @@ make_command_code cmd handlers = do
     let result        = ((header_name, definitions), (source_name, function_defs))
         header_name   = name ++ ".h"
         source_name   = name ++ ".c"
-        command_name  = undefined
+        command_name  = name
         definitions   = undefined
         function_defs = undefined
 

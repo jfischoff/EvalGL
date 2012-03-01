@@ -116,7 +116,7 @@ handle_get   = [cfun| void get(ResourceEnv* env, const GetInput* input, GetOutpu
                     }
                 }|]
                 
-handle_put    = [cfun| void get(ResourceEnv* env, const PutInput* input, PutOutput* output) {
+handle_put    = [cfun| void put(ResourceEnv* env, const PutInput* input, PutOutput* output) {
                     assert(env->in_use[input->id]);
 
                     for(int i = 0; i < env->capacity; i++) {

@@ -21,10 +21,10 @@ data FunctionStatement = FunctionStatement
         command_name            :: String,
         parent_command_name     :: String 
     }
+    deriving(Show, Eq)
 
-
-
-evaluator_def name env_name command_type_name = result where
+evaluator_def :: String -> String -> Definition
+evaluator_def env_name command_type_name = result where
     result = [cedecl| void evaluate( $params:params ); |]
     params = [param_0, param_1]
     param_0  = [cparam| $ty:env_id *env |]
@@ -32,6 +32,7 @@ evaluator_def name env_name command_type_name = result where
     typ_id = mk_named' command_type_name
     env_id = mk_named' env_name
 
+evaluator :: String -> String -> [FunctionStatement] -> Func
 evaluator env_name command_type_name functions = result where
     result = [cfun| void evaluate( $params:params ){
         switch(command->cmd.type) 
@@ -45,11 +46,11 @@ evaluator env_name command_type_name functions = result where
     case_statements = concatMap (dispatch_function_case command_type_name) functions
     switch_block = Block case_statements noSrcLoc
 
-
+dispatch_function_case :: String -> FunctionStatement -> [BlockItem]
 dispatch_function_case command_name function = result where
     result           = [BlockStm cas, BlockStm $ Break noSrcLoc]
     cas              = Case (Var enum_name noSrcLoc) (Exp (Just $ case_exp) noSrcLoc) noSrcLoc
-    struct_name      = function_name_to_struct_name $ function_statement_name function
+    struct_name      = function_statement_name function
     enum_name        = function_name_to_enum_name command_name struct_name
     func_id          = mk_id $ function_statement_name function
     env_arg          = Var (mk_id "env") noSrcLoc
